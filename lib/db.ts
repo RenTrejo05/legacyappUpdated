@@ -1,25 +1,34 @@
 import { MongoClient, Db, Collection } from "mongodb";
-import type { User, Project, Task, Comment, HistoryEntry, Notification } from "@/types";
+import type {
+  User,
+  Project,
+  Task,
+  Comment,
+  HistoryEntry,
+  Notification,
+} from "@/types";
 
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  throw new Error("MONGODB_URI no está definido en las variables de entorno");
-}
-
-// Reutilizar el cliente en el entorno de desarrollo
+// Usamos una función para obtener el cliente y así evitamos
+// lanzar errores en tiempo de build cuando no hay variables de entorno.
 const globalForMongo = globalThis as unknown as {
   _mongoClient?: MongoClient;
 };
 
-let client: MongoClient;
-
-if (!globalForMongo._mongoClient) {
-  globalForMongo._mongoClient = new MongoClient(uri);
+function getMongoClient(): MongoClient {
+  if (!globalForMongo._mongoClient) {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+      throw new Error(
+        "MONGODB_URI no está definido en las variables de entorno",
+      );
+    }
+    globalForMongo._mongoClient = new MongoClient(uri);
+  }
+  return globalForMongo._mongoClient;
 }
 
-client = globalForMongo._mongoClient;
-
 export async function getDb(): Promise<Db> {
+  const client = getMongoClient();
   if (!client.topology) {
     await client.connect();
   }
