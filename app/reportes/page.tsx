@@ -6,19 +6,19 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { Code } from "@heroui/code";
-import { getTasks, getProjects, getUsers } from "@/lib/storage-api";
+import { getTasks, getProjects, getUsers } from "@/lib/storage";
 import { title } from "@/components/primitives";
 
 export default function ReportesPage() {
   const [report, setReport] = useState<string>("");
   const [reportType, setReportType] = useState<string>("");
 
-  const generateReport = async (type: "tasks" | "projects" | "users") => {
+  const generateReport = (type: "tasks" | "projects" | "users") => {
     setReportType(type);
     let reportText = `=== REPORTE: ${type.toUpperCase()} ===\n\n`;
 
     if (type === "tasks") {
-      const tasks = await getTasks();
+      const tasks = getTasks();
       const statusCount: Record<string, number> = {};
       
       tasks.forEach((task) => {
@@ -43,8 +43,8 @@ export default function ReportesPage() {
 
       reportText += `\nTotal de Tareas: ${tasks.length}\n`;
     } else if (type === "projects") {
-      const projects = await getProjects();
-      const tasks = await getTasks();
+      const projects = getProjects();
+      const tasks = getTasks();
 
       reportText += "Tareas por Proyecto:\n";
       projects.forEach((project) => {
@@ -54,8 +54,8 @@ export default function ReportesPage() {
 
       reportText += `\nTotal de Proyectos: ${projects.length}\n`;
     } else if (type === "users") {
-      const users = await getUsers();
-      const tasks = await getTasks();
+      const users = getUsers();
+      const tasks = getTasks();
 
       reportText += "Tareas por Usuario:\n";
       users.forEach((user) => {
@@ -69,15 +69,15 @@ export default function ReportesPage() {
     setReport(reportText);
   };
 
-  const exportCSV = async () => {
-    const tasks = await getTasks();
-    const projects = await getProjects();
-    const users = await getUsers();
+  const exportCSV = () => {
+    const tasks = getTasks();
+    const projects = getProjects();
 
     let csv = "ID,Título,Estado,Prioridad,Proyecto,Asignado a,Fecha Vencimiento\n";
 
     tasks.forEach((task) => {
       const project = projects.find((p) => p.id === task.projectId);
+      const users = getUsers();
       const user = users.find((u) => u.id === task.assignedTo);
 
       csv += `${task.id},"${task.title}","${task.status || "Pendiente"}","${task.priority || "Media"}","${project ? project.name : "Sin proyecto"}","${user ? user.username : "Sin asignar"}","${task.dueDate || "Sin fecha"}"\n`;
@@ -108,23 +108,23 @@ export default function ReportesPage() {
             <div className="flex flex-wrap gap-2">
               <Button
                 color="primary"
-                onPress={() => void generateReport("tasks")}
+                onPress={() => generateReport("tasks")}
               >
                 Reporte de Tareas
               </Button>
               <Button
                 color="secondary"
-                onPress={() => void generateReport("projects")}
+                onPress={() => generateReport("projects")}
               >
                 Reporte de Proyectos
               </Button>
               <Button
                 color="success"
-                onPress={() => void generateReport("users")}
+                onPress={() => generateReport("users")}
               >
                 Reporte de Usuarios
               </Button>
-              <Button color="warning" variant="flat" onPress={() => void exportCSV()}>
+              <Button color="warning" variant="flat" onPress={exportCSV}>
                 Exportar a CSV
               </Button>
             </div>

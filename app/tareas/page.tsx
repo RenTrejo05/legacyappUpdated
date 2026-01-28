@@ -27,7 +27,7 @@ import {
   getTask,
   addHistory,
   addNotification,
-} from "@/lib/storage-api";
+} from "@/lib/storage";
 import type { Task, TaskFormData } from "@/types";
 import { title } from "@/components/primitives";
 
@@ -59,16 +59,16 @@ const PRIORITY_COLORS: Record<string, "default" | "primary" | "secondary" | "suc
 export default function TareasPage() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [projects, setProjects] = useState(getProjects());
+  const [users, setUsers] = useState(getUsers());
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
     description: "",
     status: "Pendiente",
     priority: "Media",
-    projectId: "",
-    assignedTo: "",
+    projectId: 0,
+    assignedTo: 0,
     dueDate: "",
     estimatedHours: 0,
   });
@@ -81,25 +81,23 @@ export default function TareasPage() {
   });
 
   useEffect(() => {
-    void (async () => {
-      await loadProjects();
-      await loadUsers();
-      await loadTasks();
-    })();
+    loadTasks();
+    loadProjects();
+    loadUsers();
   }, []);
 
-  const loadTasks = async () => {
-    const loadedTasks = await getTasks();
+  const loadTasks = () => {
+    const loadedTasks = getTasks();
     setTasks(loadedTasks);
     updateStats(loadedTasks);
   };
 
-  const loadProjects = async () => {
-    setProjects(await getProjects());
+  const loadProjects = () => {
+    setProjects(getProjects());
   };
 
-  const loadUsers = async () => {
-    setUsers(await getUsers());
+  const loadUsers = () => {
+    setUsers(getUsers());
   };
 
   const updateStats = (taskList: Task[]) => {
@@ -118,8 +116,8 @@ export default function TareasPage() {
     setStats({ total, completed, pending, highPriority, overdue });
   };
 
-  const handleSelectTask = async (taskId: string) => {
-    const task = await getTask(taskId);
+  const handleSelectTask = (taskId: number) => {
+    const task = getTask(taskId);
     if (task) {
       setSelectedTaskId(taskId);
       setFormData({
@@ -128,8 +126,8 @@ export default function TareasPage() {
         status: task.status,
         priority: task.priority,
         projectId: task.projectId,
-        assignedTo: task.assignedTo || "",
-        dueDate: task.dueDate || "",
+        assignedTo: task.assignedTo,
+        dueDate: task.dueDate,
         estimatedHours: task.estimatedHours,
       });
     }
@@ -142,14 +140,14 @@ export default function TareasPage() {
       description: "",
       status: "Pendiente",
       priority: "Media",
-      projectId: "",
-      assignedTo: "",
+      projectId: 0,
+      assignedTo: 0,
       dueDate: "",
       estimatedHours: 0,
     });
   };
 
-  const handleAddTask = async () => {
+  const handleAddTask = () => {
     if (!formData.title.trim()) {
       alert("El título es requerido");
       return;
@@ -157,13 +155,13 @@ export default function TareasPage() {
 
     if (!user) return;
 
-    const taskId = await addTask({
+    const taskId = addTask({
       ...formData,
       actualHours: 0,
       createdBy: user.id,
     });
 
-    await addHistory({
+    addHistory({
       taskId,
       userId: user.id,
       action: "CREATED",
@@ -171,19 +169,19 @@ export default function TareasPage() {
       newValue: formData.title,
     });
 
-    if (formData.assignedTo) {
-      await addNotification({
+    if (formData.assignedTo > 0) {
+      addNotification({
         userId: formData.assignedTo,
         message: `Nueva tarea asignada: ${formData.title}`,
         type: "task_assigned",
       });
     }
 
-    await loadTasks();
+    loadTasks();
     handleClearForm();
   };
 
-  const handleUpdateTask = async () => {
+  const handleUpdateTask = () => {
     if (!selectedTaskId) {
       alert("Selecciona una tarea");
       return;
@@ -196,16 +194,16 @@ export default function TareasPage() {
 
     if (!user) return;
 
-    const oldTask = await getTask(selectedTaskId);
+    const oldTask = getTask(selectedTaskId);
     if (!oldTask) return;
 
-    await updateTask(selectedTaskId, {
+    updateTask(selectedTaskId, {
       ...oldTask,
       ...formData,
     });
 
     if (oldTask.status !== formData.status) {
-      await addHistory({
+      addHistory({
         taskId: selectedTaskId,
         userId: user.id,
         action: "STATUS_CHANGED",
@@ -215,7 +213,7 @@ export default function TareasPage() {
     }
 
     if (oldTask.title !== formData.title) {
-      await addHistory({
+      addHistory({
         taskId: selectedTaskId,
         userId: user.id,
         action: "TITLE_CHANGED",
@@ -224,19 +222,19 @@ export default function TareasPage() {
       });
     }
 
-    if (formData.assignedTo) {
-      await addNotification({
+    if (formData.assignedTo > 0) {
+      addNotification({
         userId: formData.assignedTo,
         message: `Tarea actualizada: ${formData.title}`,
         type: "task_updated",
       });
     }
 
-    await loadTasks();
+    loadTasks();
     handleClearForm();
   };
 
-  const handleDeleteTask = async () => {
+  const handleDeleteTask = () => {
     if (!selectedTaskId) {
       alert("Selecciona una tarea");
       return;
@@ -244,11 +242,11 @@ export default function TareasPage() {
 
     if (!user) return;
 
-    const task = await getTask(selectedTaskId);
+    const task = getTask(selectedTaskId);
     if (!task) return;
 
     if (confirm(`¿Eliminar tarea: ${task.title}?`)) {
-      await addHistory({
+      addHistory({
         taskId: selectedTaskId,
         userId: user.id,
         action: "DELETED",
@@ -256,19 +254,18 @@ export default function TareasPage() {
         newValue: "",
       });
 
-      await deleteTask(selectedTaskId);
-      await loadTasks();
+      deleteTask(selectedTaskId);
+      loadTasks();
       handleClearForm();
     }
   };
 
-  const getProjectName = (projectId: string) => {
+  const getProjectName = (projectId: number) => {
     const project = projects.find((p) => p.id === projectId);
     return project ? project.name : "Sin proyecto";
   };
 
-  const getUserName = (userId?: string) => {
-    if (!userId) return "Sin asignar";
+  const getUserName = (userId: number) => {
     const user = users.find((u) => u.id === userId);
     return user ? user.username : "Sin asignar";
   };
@@ -373,16 +370,17 @@ export default function TareasPage() {
 
                 <Select
                   label="Proyecto"
-                  selectedKeys={formData.projectId ? [String(formData.projectId)] : []}
+                  selectedKeys={formData.projectId > 0 ? [String(formData.projectId)] : []}
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0];
                     setFormData({
                       ...formData,
-                      projectId: value ? (value as string) : "",
+                      projectId: value ? parseInt(value as string) : 0,
                     });
                   }}
                   variant="bordered"
                   items={[
+                    { key: "0", label: "Sin proyecto" },
                     ...projects.map((p) => ({ key: String(p.id), label: p.name })),
                   ]}
                 >
@@ -391,16 +389,17 @@ export default function TareasPage() {
 
                 <Select
                   label="Asignado a"
-                  selectedKeys={formData.assignedTo ? [String(formData.assignedTo)] : []}
+                  selectedKeys={formData.assignedTo > 0 ? [String(formData.assignedTo)] : []}
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0];
                     setFormData({
                       ...formData,
-                      assignedTo: value ? (value as string) : "",
+                      assignedTo: value ? parseInt(value as string) : 0,
                     });
                   }}
                   variant="bordered"
                   items={[
+                    { key: "0", label: "Sin asignar" },
                     ...users.map((u) => ({ key: String(u.id), label: u.username })),
                   ]}
                 >

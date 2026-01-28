@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
@@ -11,7 +11,7 @@ import {
   getHistoryByTaskId,
   getHistory,
   getUsers,
-} from "@/lib/storage-api";
+} from "@/lib/storage";
 import { title } from "@/components/primitives";
 
 const ACTION_LABELS: Record<string, string> = {
@@ -34,32 +34,28 @@ export default function HistorialPage() {
   const [taskId, setTaskId] = useState<string>("");
   const [history, setHistory] = useState<any[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const [users, setUsers] = useState<any[]>([]);
+  const users = getUsers();
 
-  useEffect(() => {
-    void (async () => {
-      setUsers(await getUsers());
-    })();
-  }, []);
-
-  const loadHistory = async () => {
-    if (!taskId.trim()) {
+  const loadHistory = () => {
+    const id = parseInt(taskId);
+    if (!id) {
       setHistory([]);
       return;
     }
 
-    const taskHistory = await getHistoryByTaskId(taskId.trim());
+    const taskHistory = getHistoryByTaskId(id);
     setHistory(taskHistory);
     setShowAll(false);
   };
 
-  const loadAllHistory = async () => {
-    const allHistory = await getHistory();
-    setHistory(allHistory);
+  const loadAllHistory = () => {
+    const allHistory = getHistory();
+    // Mostrar los últimos 100, más recientes primero
+    setHistory(allHistory.slice(-100).reverse());
     setShowAll(true);
   };
 
-  const getUserName = (userId: string) => {
+  const getUserName = (userId: number) => {
     const user = users.find((u) => u.id === userId);
     return user ? user.username : "Desconocido";
   };
@@ -78,7 +74,7 @@ export default function HistorialPage() {
             <div className="flex flex-col gap-4">
               <Input
                 label="ID Tarea"
-                type="text"
+                type="number"
                 placeholder="Ingresa el ID de la tarea"
                 value={taskId}
                 onValueChange={setTaskId}

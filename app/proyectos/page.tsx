@@ -19,7 +19,7 @@ import {
   addProject,
   updateProject,
   deleteProject,
-} from "@/lib/storage-api";
+} from "@/lib/storage";
 import type { Project, ProjectFormData } from "@/types";
 import { title } from "@/components/primitives";
 
@@ -29,7 +29,7 @@ export default function ProyectosPage() {
     name: "",
     description: "",
   });
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
+  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
     null
   );
 
@@ -37,8 +37,8 @@ export default function ProyectosPage() {
     loadProjects();
   }, []);
 
-  const loadProjects = async () => {
-    setProjects(await getProjects());
+  const loadProjects = () => {
+    setProjects(getProjects());
   };
 
   const handleSelectProject = (project: Project) => {
@@ -57,18 +57,18 @@ export default function ProyectosPage() {
     });
   };
 
-  const handleAddProject = async () => {
+  const handleAddProject = () => {
     if (!formData.name.trim()) {
       alert("El nombre es requerido");
       return;
     }
 
-    await addProject(formData);
-    await loadProjects();
+    addProject(formData);
+    loadProjects();
     handleClearForm();
   };
 
-  const handleUpdateProject = async () => {
+  const handleUpdateProject = () => {
     if (!selectedProjectId) {
       alert("Selecciona un proyecto");
       return;
@@ -79,12 +79,12 @@ export default function ProyectosPage() {
       return;
     }
 
-    await updateProject(selectedProjectId, formData);
-    await loadProjects();
+    updateProject(selectedProjectId, formData);
+    loadProjects();
     handleClearForm();
   };
 
-  const handleDeleteProject = async () => {
+  const handleDeleteProject = () => {
     if (!selectedProjectId) {
       alert("Selecciona un proyecto");
       return;
@@ -94,8 +94,8 @@ export default function ProyectosPage() {
     if (!project) return;
 
     if (confirm(`¿Eliminar proyecto: ${project.name}?`)) {
-      await deleteProject(selectedProjectId);
-      await loadProjects();
+      deleteProject(selectedProjectId);
+      loadProjects();
       handleClearForm();
     }
   };

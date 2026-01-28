@@ -15,7 +15,7 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Chip } from "@heroui/chip";
-import { getTasks, getProjects } from "@/lib/storage-api";
+import { getTasks, getProjects } from "@/lib/storage";
 import type { Task, SearchFilters } from "@/types";
 import { title } from "@/components/primitives";
 
@@ -50,19 +50,17 @@ export default function BusquedaPage() {
     text: "",
     status: "",
     priority: "",
-    projectId: "",
+    projectId: 0,
   });
   const [results, setResults] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState(getProjects());
 
   useEffect(() => {
-    void (async () => {
-      setProjects(await getProjects());
-    })();
+    setProjects(getProjects());
   }, []);
 
-  const handleSearch = async () => {
-    const allTasks = await getTasks();
+  const handleSearch = () => {
+    const allTasks = getTasks();
     const filtered = allTasks.filter((task) => {
       // Filtro de texto
       if (filters.text) {
@@ -87,7 +85,7 @@ export default function BusquedaPage() {
       }
 
       // Filtro de proyecto
-      if (filters.projectId && task.projectId !== filters.projectId) {
+      if (filters.projectId > 0 && task.projectId !== filters.projectId) {
         return false;
       }
 
@@ -97,7 +95,7 @@ export default function BusquedaPage() {
     setResults(filtered);
   };
 
-  const getProjectName = (projectId: string) => {
+  const getProjectName = (projectId: number) => {
     const project = projects.find((p) => p.id === projectId);
     return project ? project.name : "Sin proyecto";
   };
@@ -165,18 +163,20 @@ export default function BusquedaPage() {
 
                 <Select
                   label="Proyecto"
-                  selectedKeys={filters.projectId ? [filters.projectId] : []}
+                  selectedKeys={
+                    filters.projectId > 0 ? [String(filters.projectId)] : []
+                  }
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0];
                     setFilters({
                       ...filters,
-                      projectId: value ? (value as string) : "",
+                      projectId: value ? parseInt(value as string) : 0,
                     });
                   }}
                   variant="bordered"
                   className="md:col-span-2"
                   items={[
-                    { key: "", label: "Todos" },
+                    { key: "0", label: "Todos" },
                     ...projects.map((p) => ({ key: String(p.id), label: p.name })),
                   ]}
                 >
