@@ -7,11 +7,7 @@ import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getUnreadNotificationsByUserId,
-  getNotificationsByUserId,
-  markNotificationsAsRead,
-} from "@/lib/storage";
+import type { Notification } from "@/types";
 import { title } from "@/components/primitives";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -30,7 +26,7 @@ const TYPE_COLORS: Record<string, "default" | "primary" | "secondary" | "success
 
 export default function NotificacionesPage() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
@@ -39,23 +35,43 @@ export default function NotificacionesPage() {
     }
   }, [user]);
 
-  const loadNotifications = () => {
+  const loadNotifications = async () => {
     if (!user) return;
 
-    if (showAll) {
-      const all = getNotificationsByUserId(user.id);
-      setNotifications(all.reverse());
-    } else {
-      const unread = getUnreadNotificationsByUserId(user.id);
-      setNotifications(unread.reverse());
+    try {
+      const query = showAll
+        ? `userId=${user.id}`
+        : `userId=${user.id}&unread=1`;
+      const res = await fetch(`/api/notifications?${query}`);
+      if (!res.ok) {
+        setNotifications([]);
+        return;
+      }
+      const data: Notification[] = await res.json();
+      setNotifications(data);
+    } catch (e) {
+      console.error("Error cargando notificaciones:", e);
     }
   };
 
-  const handleMarkAsRead = () => {
+  const handleMarkAsRead = async () => {
     if (!user) return;
 
-    markNotificationsAsRead(user.id);
-    loadNotifications();
+    try {
+      const res = await fetch("/api/notifications/mark-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        alert("No se pudieron marcar como leídas");
+        return;
+      }
+      await loadNotifications();
+    } catch (e) {
+      console.error("Error marcando notificaciones como leídas:", e);
+      alert("Error al marcar como leídas");
+    }
   };
 
   useEffect(() => {

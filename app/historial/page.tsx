@@ -1,17 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import {
-  getHistoryByTaskId,
-  getHistory,
-  getUsers,
-} from "@/lib/storage";
+import type { HistoryEntry, User } from "@/types";
 import { title } from "@/components/primitives";
 
 const ACTION_LABELS: Record<string, string> = {
@@ -32,27 +28,58 @@ const ACTION_COLORS: Record<string, "default" | "primary" | "secondary" | "succe
 
 export default function HistorialPage() {
   const [taskId, setTaskId] = useState<string>("");
-  const [history, setHistory] = useState<any[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [showAll, setShowAll] = useState(false);
-  const users = getUsers();
+  const [users, setUsers] = useState<User[]>([]);
 
-  const loadHistory = () => {
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const res = await fetch("/api/users");
+        if (!res.ok) return;
+        const data: User[] = await res.json();
+        setUsers(data);
+      } catch (e) {
+        console.error("Error cargando usuarios:", e);
+      }
+    };
+    loadUsers();
+  }, []);
+
+  const loadHistory = async () => {
     const id = parseInt(taskId);
     if (!id) {
       setHistory([]);
       return;
     }
 
-    const taskHistory = getHistoryByTaskId(id);
-    setHistory(taskHistory);
-    setShowAll(false);
+    try {
+      const res = await fetch(`/api/history?taskId=${id}`);
+      if (!res.ok) {
+        setHistory([]);
+        return;
+      }
+      const data: HistoryEntry[] = await res.json();
+      setHistory(data);
+      setShowAll(false);
+    } catch (e) {
+      console.error("Error cargando historial:", e);
+    }
   };
 
-  const loadAllHistory = () => {
-    const allHistory = getHistory();
-    // Mostrar los últimos 100, más recientes primero
-    setHistory(allHistory.slice(-100).reverse());
-    setShowAll(true);
+  const loadAllHistory = async () => {
+    try {
+      const res = await fetch("/api/history?limit=100");
+      if (!res.ok) {
+        setHistory([]);
+        return;
+      }
+      const data: HistoryEntry[] = await res.json();
+      setHistory(data);
+      setShowAll(true);
+    } catch (e) {
+      console.error("Error cargando todo el historial:", e);
+    }
   };
 
   const getUserName = (userId: number) => {

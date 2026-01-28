@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "@/types";
-import { getUserByCredentials, initStorage } from "@/lib/storage";
 
 interface AuthContextType {
   user: User | null;
@@ -19,9 +18,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Inicializar storage
-    initStorage();
-    
     // Verificar si hay usuario guardado en sessionStorage
     if (typeof window !== "undefined") {
       const savedUser = sessionStorage.getItem("currentUser");
@@ -37,15 +33,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    const foundUser = getUserByCredentials(username, password);
-    if (foundUser) {
-      setUser(foundUser);
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!res.ok) {
+        return false;
+      }
+
+      const loggedUser: User = await res.json();
+      setUser(loggedUser);
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("currentUser", JSON.stringify(foundUser));
+        sessionStorage.setItem("currentUser", JSON.stringify(loggedUser));
       }
       return true;
+    } catch (e) {
+      console.error("Error en login:", e);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {

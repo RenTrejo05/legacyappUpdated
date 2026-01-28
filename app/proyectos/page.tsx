@@ -14,12 +14,6 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/table";
-import {
-  getProjects,
-  addProject,
-  updateProject,
-  deleteProject,
-} from "@/lib/storage";
 import type { Project, ProjectFormData } from "@/types";
 import { title } from "@/components/primitives";
 
@@ -37,8 +31,15 @@ export default function ProyectosPage() {
     loadProjects();
   }, []);
 
-  const loadProjects = () => {
-    setProjects(getProjects());
+  const loadProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      if (!res.ok) return;
+      const data: Project[] = await res.json();
+      setProjects(data);
+    } catch (e) {
+      console.error("Error cargando proyectos:", e);
+    }
   };
 
   const handleSelectProject = (project: Project) => {
@@ -57,18 +58,33 @@ export default function ProyectosPage() {
     });
   };
 
-  const handleAddProject = () => {
+  const handleAddProject = async () => {
     if (!formData.name.trim()) {
       alert("El nombre es requerido");
       return;
     }
 
-    addProject(formData);
-    loadProjects();
-    handleClearForm();
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        alert("No se pudo crear el proyecto");
+        return;
+      }
+
+      await loadProjects();
+      handleClearForm();
+    } catch (e) {
+      console.error("Error agregando proyecto:", e);
+      alert("Error al agregar el proyecto");
+    }
   };
 
-  const handleUpdateProject = () => {
+  const handleUpdateProject = async () => {
     if (!selectedProjectId) {
       alert("Selecciona un proyecto");
       return;
@@ -79,12 +95,27 @@ export default function ProyectosPage() {
       return;
     }
 
-    updateProject(selectedProjectId, formData);
-    loadProjects();
-    handleClearForm();
+    try {
+      const res = await fetch(`/api/projects/${selectedProjectId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) {
+        alert("No se pudo actualizar el proyecto");
+        return;
+      }
+
+      await loadProjects();
+      handleClearForm();
+    } catch (e) {
+      console.error("Error actualizando proyecto:", e);
+      alert("Error al actualizar el proyecto");
+    }
   };
 
-  const handleDeleteProject = () => {
+  const handleDeleteProject = async () => {
     if (!selectedProjectId) {
       alert("Selecciona un proyecto");
       return;
@@ -93,10 +124,23 @@ export default function ProyectosPage() {
     const project = projects.find((p) => p.id === selectedProjectId);
     if (!project) return;
 
-    if (confirm(`¿Eliminar proyecto: ${project.name}?`)) {
-      deleteProject(selectedProjectId);
-      loadProjects();
+    if (!confirm(`¿Eliminar proyecto: ${project.name}?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/projects/${selectedProjectId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        alert("No se pudo eliminar el proyecto");
+        return;
+      }
+      await loadProjects();
       handleClearForm();
+    } catch (e) {
+      console.error("Error eliminando proyecto:", e);
+      alert("Error al eliminar el proyecto");
     }
   };
 

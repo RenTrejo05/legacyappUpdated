@@ -15,8 +15,7 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Chip } from "@heroui/chip";
-import { getTasks, getProjects } from "@/lib/storage";
-import type { Task, SearchFilters } from "@/types";
+import type { Task, SearchFilters, Project } from "@/types";
 import { title } from "@/components/primitives";
 
 const STATUS_OPTIONS = [
@@ -53,15 +52,32 @@ export default function BusquedaPage() {
     projectId: 0,
   });
   const [results, setResults] = useState<Task[]>([]);
-  const [projects, setProjects] = useState(getProjects());
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
-    setProjects(getProjects());
+    const loadProjects = async () => {
+      try {
+        const res = await fetch("/api/projects");
+        if (!res.ok) return;
+        const data: Project[] = await res.json();
+        setProjects(data);
+      } catch (e) {
+        console.error("Error cargando proyectos:", e);
+      }
+    };
+    loadProjects();
   }, []);
 
-  const handleSearch = () => {
-    const allTasks = getTasks();
-    const filtered = allTasks.filter((task) => {
+  const handleSearch = async () => {
+    try {
+      const res = await fetch("/api/tasks");
+      if (!res.ok) {
+        setResults([]);
+        return;
+      }
+      const allTasks: Task[] = await res.json();
+
+      const filtered = allTasks.filter((task) => {
       // Filtro de texto
       if (filters.text) {
         const searchText = filters.text.toLowerCase();

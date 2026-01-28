@@ -4,7 +4,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { useAuth } from "@/contexts/AuthContext";
-import { getTasks, getProjects, getUnreadNotificationsByUserId } from "@/lib/storage";
 import { useEffect, useState } from "react";
 import { title } from "@/components/primitives";
 import Link from "next/link";
@@ -23,34 +22,52 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (user) {
-      const tasks = getTasks();
-      const projects = getProjects();
-      const notifications = getUnreadNotificationsByUserId(user.id);
+    const load = async () => {
+      if (!user) return;
 
-      const completed = tasks.filter((t) => t.status === "Completada").length;
-      const pending = tasks.filter((t) => t.status !== "Completada").length;
-      const highPriority = tasks.filter(
-        (t) => t.priority === "Alta" || t.priority === "Crítica"
-      ).length;
+      try {
+        const [tasksRes, projectsRes, notificationsRes] = await Promise.all([
+          fetch("/api/tasks"),
+          fetch("/api/projects"),
+          fetch(`/api/notifications?userId=${user.id}&unread=1`),
+        ]);
 
-      const now = new Date();
-      const overdue = tasks.filter((t) => {
-        if (!t.dueDate || t.status === "Completada") return false;
-        const due = new Date(t.dueDate);
-        return due < now;
-      }).length;
+        if (!tasksRes.ok || !projectsRes.ok || !notificationsRes.ok) {
+          return;
+        }
 
-      setStats({
-        totalTasks: tasks.length,
-        completedTasks: completed,
-        pendingTasks: pending,
-        highPriorityTasks: highPriority,
-        overdueTasks: overdue,
-        totalProjects: projects.length,
-        unreadNotifications: notifications.length,
-      });
-    }
+        const tasks = await tasksRes.json();
+        const projects = await projectsRes.json();
+        const notifications = await notificationsRes.json();
+
+        const completed = tasks.filter((t: any) => t.status === "Completada").length;
+        const pending = tasks.filter((t: any) => t.status !== "Completada").length;
+        const highPriority = tasks.filter(
+          (t: any) => t.priority === "Alta" || t.priority === "Crítica",
+        ).length;
+
+        const now = new Date();
+        const overdue = tasks.filter((t: any) => {
+          if (!t.dueDate || t.status === "Completada") return false;
+          const due = new Date(t.dueDate);
+          return due < now;
+        }).length;
+
+        setStats({
+          totalTasks: tasks.length,
+          completedTasks: completed,
+          pendingTasks: pending,
+          highPriorityTasks: highPriority,
+          overdueTasks: overdue,
+          totalProjects: projects.length,
+          unreadNotifications: notifications.length,
+        });
+      } catch (e) {
+        console.error("Error cargando estadísticas del dashboard:", e);
+      }
+    };
+
+    load();
   }, [user]);
 
   return (

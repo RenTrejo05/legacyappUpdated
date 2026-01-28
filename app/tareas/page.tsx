@@ -17,18 +17,7 @@ import {
 } from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getTasks,
-  getProjects,
-  getUsers,
-  addTask,
-  updateTask,
-  deleteTask,
-  getTask,
-  addHistory,
-  addNotification,
-} from "@/lib/storage";
-import type { Task, TaskFormData } from "@/types";
+import type { Task, TaskFormData, Project, User } from "@/types";
 import { title } from "@/components/primitives";
 
 const STATUS_OPTIONS = [
@@ -59,8 +48,8 @@ const PRIORITY_COLORS: Record<string, "default" | "primary" | "secondary" | "suc
 export default function TareasPage() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [projects, setProjects] = useState(getProjects());
-  const [users, setUsers] = useState(getUsers());
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
   const [formData, setFormData] = useState<TaskFormData>({
     title: "",
@@ -81,23 +70,65 @@ export default function TareasPage() {
   });
 
   useEffect(() => {
-    loadTasks();
-    loadProjects();
-    loadUsers();
+    const loadAll = async () => {
+      try {
+        const [tasksRes, projectsRes, usersRes] = await Promise.all([
+          fetch("/api/tasks"),
+          fetch("/api/projects"),
+          fetch("/api/users"),
+        ]);
+        if (!tasksRes.ok || !projectsRes.ok || !usersRes.ok) return;
+
+        const [tasksData, projectsData, usersData] = await Promise.all([
+          tasksRes.json(),
+          projectsRes.json(),
+          usersRes.json(),
+        ]);
+
+        setTasks(tasksData);
+        setProjects(projectsData);
+        setUsers(usersData);
+        updateStats(tasksData);
+      } catch (e) {
+        console.error("Error cargando datos de tareas:", e);
+      }
+    };
+
+    loadAll();
   }, []);
 
-  const loadTasks = () => {
-    const loadedTasks = getTasks();
-    setTasks(loadedTasks);
-    updateStats(loadedTasks);
+  const loadTasks = async () => {
+    try {
+      const res = await fetch("/api/tasks");
+      if (!res.ok) return;
+      const loadedTasks: Task[] = await res.json();
+      setTasks(loadedTasks);
+      updateStats(loadedTasks);
+    } catch (e) {
+      console.error("Error recargando tareas:", e);
+    }
   };
 
-  const loadProjects = () => {
-    setProjects(getProjects());
+  const loadProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      if (!res.ok) return;
+      const data: Project[] = await res.json();
+      setProjects(data);
+    } catch (e) {
+      console.error("Error recargando proyectos:", e);
+    }
   };
 
-  const loadUsers = () => {
-    setUsers(getUsers());
+  const loadUsers = async () => {
+    try {
+      const res = await fetch("/api/users");
+      if (!res.ok) return;
+      const data: User[] = await res.json();
+      setUsers(data);
+    } catch (e) {
+      console.error("Error recargando usuarios:", e);
+    }
   };
 
   const updateStats = (taskList: Task[]) => {
@@ -117,20 +148,19 @@ export default function TareasPage() {
   };
 
   const handleSelectTask = (taskId: number) => {
-    const task = getTask(taskId);
-    if (task) {
-      setSelectedTaskId(taskId);
-      setFormData({
-        title: task.title,
-        description: task.description,
-        status: task.status,
-        priority: task.priority,
-        projectId: task.projectId,
-        assignedTo: task.assignedTo,
-        dueDate: task.dueDate,
-        estimatedHours: task.estimatedHours,
-      });
-    }
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+    setSelectedTaskId(taskId);
+    setFormData({
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+      projectId: task.projectId,
+      assignedTo: task.assignedTo,
+      dueDate: task.dueDate,
+      estimatedHours: task.estimatedHours,
+    });
   };
 
   const handleClearForm = () => {
@@ -147,7 +177,7 @@ export default function TareasPage() {
     });
   };
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
     if (!formData.title.trim()) {
       alert("El título es requerido");
       return;
@@ -155,33 +185,57 @@ export default function TareasPage() {
 
     if (!user) return;
 
-    const taskId = addTask({
-      ...formData,
-      actualHours: 0,
-      createdBy: user.id,
-    });
-
-    addHistory({
-      taskId,
-      userId: user.id,
-      action: "CREATED",
-      oldValue: "",
-      newValue: formData.title,
-    });
-
-    if (formData.assignedTo > 0) {
-      addNotification({
-        userId: formData.assignedTo,
-        message: `Nueva tarea asignada: ${formData.title}`,
-        type: "task_assigned",
+    try {
+      const taskRes = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          actualHours: 0,
+          createdBy: user.id,
+        }),
       });
-    }
 
-    loadTasks();
-    handleClearForm();
+      if (!taskRes.ok) {
+        alert("No se pudo crear la tarea");
+        return;
+      }
+
+      const createdTask: Task = await taskRes.json();
+
+      await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: createdTask.id,
+          userId: user.id,
+          action: "CREATED",
+          oldValue: "",
+          newValue: formData.title,
+        }),
+      });
+
+      if (formData.assignedTo > 0) {
+        await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: formData.assignedTo,
+            message: `Nueva tarea asignada: ${formData.title}`,
+            type: "task_assigned",
+          }),
+        });
+      }
+
+      await loadTasks();
+      handleClearForm();
+    } catch (e) {
+      console.error("Error agregando tarea:", e);
+      alert("Error al agregar la tarea");
+    }
   };
 
-  const handleUpdateTask = () => {
+  const handleUpdateTask = async () => {
     if (!selectedTaskId) {
       alert("Selecciona una tarea");
       return;
@@ -194,47 +248,73 @@ export default function TareasPage() {
 
     if (!user) return;
 
-    const oldTask = getTask(selectedTaskId);
+    const oldTask = tasks.find((t) => t.id === selectedTaskId);
     if (!oldTask) return;
 
-    updateTask(selectedTaskId, {
-      ...oldTask,
-      ...formData,
-    });
-
-    if (oldTask.status !== formData.status) {
-      addHistory({
-        taskId: selectedTaskId,
-        userId: user.id,
-        action: "STATUS_CHANGED",
-        oldValue: oldTask.status,
-        newValue: formData.status,
+    try {
+      const res = await fetch(`/api/tasks/${selectedTaskId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...oldTask,
+          ...formData,
+        }),
       });
-    }
 
-    if (oldTask.title !== formData.title) {
-      addHistory({
-        taskId: selectedTaskId,
-        userId: user.id,
-        action: "TITLE_CHANGED",
-        oldValue: oldTask.title,
-        newValue: formData.title,
-      });
-    }
+      if (!res.ok) {
+        alert("No se pudo actualizar la tarea");
+        return;
+      }
 
-    if (formData.assignedTo > 0) {
-      addNotification({
-        userId: formData.assignedTo,
-        message: `Tarea actualizada: ${formData.title}`,
-        type: "task_updated",
-      });
-    }
+      if (oldTask.status !== formData.status) {
+        await fetch("/api/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            taskId: selectedTaskId,
+            userId: user.id,
+            action: "STATUS_CHANGED",
+            oldValue: oldTask.status,
+            newValue: formData.status,
+          }),
+        });
+      }
 
-    loadTasks();
-    handleClearForm();
+      if (oldTask.title !== formData.title) {
+        await fetch("/api/history", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            taskId: selectedTaskId,
+            userId: user.id,
+            action: "TITLE_CHANGED",
+            oldValue: oldTask.title,
+            newValue: formData.title,
+          }),
+        });
+      }
+
+      if (formData.assignedTo > 0) {
+        await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: formData.assignedTo,
+            message: `Tarea actualizada: ${formData.title}`,
+            type: "task_updated",
+          }),
+        });
+      }
+
+      await loadTasks();
+      handleClearForm();
+    } catch (e) {
+      console.error("Error actualizando tarea:", e);
+      alert("Error al actualizar la tarea");
+    }
   };
 
-  const handleDeleteTask = () => {
+  const handleDeleteTask = async () => {
     if (!selectedTaskId) {
       alert("Selecciona una tarea");
       return;
@@ -242,21 +322,40 @@ export default function TareasPage() {
 
     if (!user) return;
 
-    const task = getTask(selectedTaskId);
+    const task = tasks.find((t) => t.id === selectedTaskId);
     if (!task) return;
 
-    if (confirm(`¿Eliminar tarea: ${task.title}?`)) {
-      addHistory({
-        taskId: selectedTaskId,
-        userId: user.id,
-        action: "DELETED",
-        oldValue: task.title,
-        newValue: "",
+    if (!confirm(`¿Eliminar tarea: ${task.title}?`)) {
+      return;
+    }
+
+    try {
+      await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: selectedTaskId,
+          userId: user.id,
+          action: "DELETED",
+          oldValue: task.title,
+          newValue: "",
+        }),
       });
 
-      deleteTask(selectedTaskId);
-      loadTasks();
+      const res = await fetch(`/api/tasks/${selectedTaskId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        alert("No se pudo eliminar la tarea");
+        return;
+      }
+
+      await loadTasks();
       handleClearForm();
+    } catch (e) {
+      console.error("Error eliminando tarea:", e);
+      alert("Error al eliminar la tarea");
     }
   };
 

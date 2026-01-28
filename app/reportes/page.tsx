@@ -6,21 +6,39 @@ import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { Code } from "@heroui/code";
-import { getTasks, getProjects, getUsers } from "@/lib/storage";
+import type { Task, Project, User } from "@/types";
 import { title } from "@/components/primitives";
 
 export default function ReportesPage() {
   const [report, setReport] = useState<string>("");
   const [reportType, setReportType] = useState<string>("");
 
-  const generateReport = (type: "tasks" | "projects" | "users") => {
+  const fetchTasks = async (): Promise<Task[]> => {
+    const res = await fetch("/api/tasks");
+    if (!res.ok) return [];
+    return res.json();
+  };
+
+  const fetchProjects = async (): Promise<Project[]> => {
+    const res = await fetch("/api/projects");
+    if (!res.ok) return [];
+    return res.json();
+  };
+
+  const fetchUsers = async (): Promise<User[]> => {
+    const res = await fetch("/api/users");
+    if (!res.ok) return [];
+    return res.json();
+  };
+
+  const generateReport = async (type: "tasks" | "projects" | "users") => {
     setReportType(type);
     let reportText = `=== REPORTE: ${type.toUpperCase()} ===\n\n`;
 
     if (type === "tasks") {
-      const tasks = getTasks();
+      const tasks = await fetchTasks();
       const statusCount: Record<string, number> = {};
-      
+
       tasks.forEach((task) => {
         const status = task.status || "Pendiente";
         statusCount[status] = (statusCount[status] || 0) + 1;
@@ -43,8 +61,10 @@ export default function ReportesPage() {
 
       reportText += `\nTotal de Tareas: ${tasks.length}\n`;
     } else if (type === "projects") {
-      const projects = getProjects();
-      const tasks = getTasks();
+      const [projects, tasks] = await Promise.all([
+        fetchProjects(),
+        fetchTasks(),
+      ]);
 
       reportText += "Tareas por Proyecto:\n";
       projects.forEach((project) => {
@@ -54,8 +74,7 @@ export default function ReportesPage() {
 
       reportText += `\nTotal de Proyectos: ${projects.length}\n`;
     } else if (type === "users") {
-      const users = getUsers();
-      const tasks = getTasks();
+      const [users, tasks] = await Promise.all([fetchUsers(), fetchTasks()]);
 
       reportText += "Tareas por Usuario:\n";
       users.forEach((user) => {
@@ -69,18 +88,22 @@ export default function ReportesPage() {
     setReport(reportText);
   };
 
-  const exportCSV = () => {
-    const tasks = getTasks();
-    const projects = getProjects();
+  const exportCSV = async () => {
+    const [tasks, projects, users] = await Promise.all([
+      fetchTasks(),
+      fetchProjects(),
+      fetchUsers(),
+    ]);
 
     let csv = "ID,Título,Estado,Prioridad,Proyecto,Asignado a,Fecha Vencimiento\n";
 
     tasks.forEach((task) => {
       const project = projects.find((p) => p.id === task.projectId);
-      const users = getUsers();
       const user = users.find((u) => u.id === task.assignedTo);
 
-      csv += `${task.id},"${task.title}","${task.status || "Pendiente"}","${task.priority || "Media"}","${project ? project.name : "Sin proyecto"}","${user ? user.username : "Sin asignar"}","${task.dueDate || "Sin fecha"}"\n`;
+      csv += `${task.id},"${task.title}","${task.status || "Pendiente"}","${task.priority || "Media"}","${
+        project ? project.name : "Sin proyecto"
+      }","${user ? user.username : "Sin asignar"}","${task.dueDate || "Sin fecha"}"\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

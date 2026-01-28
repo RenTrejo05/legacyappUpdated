@@ -8,37 +8,51 @@ import { Textarea } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  getCommentsByTaskId,
-  addComment,
-  getUsers,
-  getTask,
-} from "@/lib/storage";
+import type { Comment, User, Task } from "@/types";
 import { title } from "@/components/primitives";
 
 export default function ComentariosPage() {
   const { user } = useAuth();
   const [taskId, setTaskId] = useState<string>("");
   const [commentText, setCommentText] = useState("");
-  const [comments, setComments] = useState<any[]>([]);
-  const [users, setUsers] = useState(getUsers());
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    setUsers(getUsers());
+    const loadUsers = async () => {
+      try {
+        const res = await fetch("/api/users");
+        if (!res.ok) return;
+        const data: User[] = await res.json();
+        setUsers(data);
+      } catch (e) {
+        console.error("Error cargando usuarios:", e);
+      }
+    };
+    loadUsers();
   }, []);
 
-  const loadComments = () => {
+  const loadComments = async () => {
     const id = parseInt(taskId);
     if (!id) {
       setComments([]);
       return;
     }
 
-    const taskComments = getCommentsByTaskId(id);
-    setComments(taskComments);
+    try {
+      const res = await fetch(`/api/comments?taskId=${id}`);
+      if (!res.ok) {
+        setComments([]);
+        return;
+      }
+      const data: Comment[] = await res.json();
+      setComments(data);
+    } catch (e) {
+      console.error("Error cargando comentarios:", e);
+    }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     const id = parseInt(taskId);
     if (!id) {
       alert("ID de tarea requerido");
@@ -52,20 +66,35 @@ export default function ComentariosPage() {
 
     if (!user) return;
 
-    const task = getTask(id);
-    if (!task) {
-      alert("Tarea no encontrada");
-      return;
+    try {
+      const taskRes = await fetch(`/api/tasks/${id}`);
+      if (!taskRes.ok) {
+        alert("Tarea no encontrada");
+        return;
+      }
+      await taskRes.json() as Task;
+
+      const res = await fetch("/api/comments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: id,
+          userId: user.id,
+          commentText: commentText.trim(),
+        }),
+      });
+
+      if (!res.ok) {
+        alert("No se pudo agregar el comentario");
+        return;
+      }
+
+      setCommentText("");
+      await loadComments();
+    } catch (e) {
+      console.error("Error agregando comentario:", e);
+      alert("Error al agregar el comentario");
     }
-
-    addComment({
-      taskId: id,
-      userId: user.id,
-      commentText: commentText.trim(),
-    });
-
-    setCommentText("");
-    loadComments();
   };
 
   const getUserName = (userId: number) => {
