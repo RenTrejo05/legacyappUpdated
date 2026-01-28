@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "@/types";
-import { getUserByCredentials, initStorage } from "@/lib/storage";
+import { apiClient } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
@@ -19,17 +19,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Inicializar storage
-    initStorage();
-    
-    // Verificar si hay usuario guardado en sessionStorage
+    // Verificar si hay token guardado en localStorage
     if (typeof window !== "undefined") {
-      const savedUser = sessionStorage.getItem("currentUser");
-      if (savedUser) {
+      const savedToken = localStorage.getItem("authToken");
+      const savedUser = localStorage.getItem("currentUser");
+      
+      if (savedToken && savedUser) {
         try {
+          apiClient.setToken(savedToken);
           setUser(JSON.parse(savedUser));
         } catch (e) {
-          sessionStorage.removeItem("currentUser");
+          localStorage.removeItem("authToken");
+          localStorage.removeItem("currentUser");
         }
       }
     }
@@ -37,21 +38,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    const foundUser = getUserByCredentials(username, password);
-    if (foundUser) {
-      setUser(foundUser);
+    try {
+      const response = await apiClient.login(username, password);
+      setUser(response.user);
+      
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("currentUser", JSON.stringify(foundUser));
+        localStorage.setItem("authToken", response.token);
+        localStorage.setItem("currentUser", JSON.stringify(response.user));
       }
       return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
     setUser(null);
+    apiClient.setToken(null);
+    
     if (typeof window !== "undefined") {
-      sessionStorage.removeItem("currentUser");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("currentUser");
     }
   };
 

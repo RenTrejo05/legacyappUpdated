@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { useAuth } from "@/contexts/AuthContext";
-import { getTasks, getProjects, getUnreadNotificationsByUserId } from "@/lib/storage";
+import { getTasks, getProjects, getUnreadNotificationsByUserId } from "@/lib/storage-api";
 import { useEffect, useState } from "react";
 import { title } from "@/components/primitives";
 import Link from "next/link";
@@ -23,34 +23,42 @@ export default function Home() {
   });
 
   useEffect(() => {
-    if (user) {
-      const tasks = getTasks();
-      const projects = getProjects();
-      const notifications = getUnreadNotificationsByUserId(user.id);
+    const fetchData = async () => {
+      if (user) {
+        try {
+          const tasks = await getTasks();
+          const projects = await getProjects();
+          const notifications = await getUnreadNotificationsByUserId(user.id);
 
-      const completed = tasks.filter((t) => t.status === "Completada").length;
-      const pending = tasks.filter((t) => t.status !== "Completada").length;
-      const highPriority = tasks.filter(
-        (t) => t.priority === "Alta" || t.priority === "Crítica"
-      ).length;
+          const completed = tasks.filter((t) => t.status === "Completada").length;
+          const pending = tasks.filter((t) => t.status !== "Completada").length;
+          const highPriority = tasks.filter(
+            (t) => t.priority === "Alta" || t.priority === "Crítica"
+          ).length;
 
-      const now = new Date();
-      const overdue = tasks.filter((t) => {
-        if (!t.dueDate || t.status === "Completada") return false;
-        const due = new Date(t.dueDate);
-        return due < now;
-      }).length;
+          const now = new Date();
+          const overdue = tasks.filter((t) => {
+            if (!t.dueDate || t.status === "Completada") return false;
+            const due = new Date(t.dueDate);
+            return due < now;
+          }).length;
 
-      setStats({
-        totalTasks: tasks.length,
-        completedTasks: completed,
-        pendingTasks: pending,
-        highPriorityTasks: highPriority,
-        overdueTasks: overdue,
-        totalProjects: projects.length,
-        unreadNotifications: notifications.length,
-      });
-    }
+          setStats({
+            totalTasks: tasks.length,
+            completedTasks: completed,
+            pendingTasks: pending,
+            highPriorityTasks: highPriority,
+            overdueTasks: overdue,
+            totalProjects: projects.length,
+            unreadNotifications: notifications.length,
+          });
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
+      }
+    };
+
+    fetchData();
   }, [user]);
 
   return (

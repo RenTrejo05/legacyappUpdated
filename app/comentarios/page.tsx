@@ -13,7 +13,7 @@ import {
   addComment,
   getUsers,
   getTask,
-} from "@/lib/storage";
+} from "@/lib/storage-api";
 import { title } from "@/components/primitives";
 
 export default function ComentariosPage() {
@@ -21,26 +21,26 @@ export default function ComentariosPage() {
   const [taskId, setTaskId] = useState<string>("");
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<any[]>([]);
-  const [users, setUsers] = useState(getUsers());
+  const [users, setUsers] = useState<any[]>([]);
 
   useEffect(() => {
-    setUsers(getUsers());
+    void (async () => {
+      setUsers(await getUsers());
+    })();
   }, []);
 
-  const loadComments = () => {
-    const id = parseInt(taskId);
-    if (!id) {
+  const loadComments = async () => {
+    if (!taskId.trim()) {
       setComments([]);
       return;
     }
 
-    const taskComments = getCommentsByTaskId(id);
+    const taskComments = await getCommentsByTaskId(taskId.trim());
     setComments(taskComments);
   };
 
-  const handleAddComment = () => {
-    const id = parseInt(taskId);
-    if (!id) {
+  const handleAddComment = async () => {
+    if (!taskId.trim()) {
       alert("ID de tarea requerido");
       return;
     }
@@ -52,23 +52,23 @@ export default function ComentariosPage() {
 
     if (!user) return;
 
-    const task = getTask(id);
+    const task = await getTask(taskId.trim());
     if (!task) {
       alert("Tarea no encontrada");
       return;
     }
 
-    addComment({
-      taskId: id,
+    await addComment({
+      taskId: taskId.trim(),
       userId: user.id,
       commentText: commentText.trim(),
-    });
+    } as any);
 
     setCommentText("");
-    loadComments();
+    await loadComments();
   };
 
-  const getUserName = (userId: number) => {
+  const getUserName = (userId: string) => {
     const foundUser = users.find((u) => u.id === userId);
     return foundUser ? foundUser.username : "Usuario desconocido";
   };
@@ -87,7 +87,7 @@ export default function ComentariosPage() {
             <div className="flex flex-col gap-4">
               <Input
                 label="ID Tarea"
-                type="number"
+                type="text"
                 placeholder="Ingresa el ID de la tarea"
                 value={taskId}
                 onValueChange={setTaskId}

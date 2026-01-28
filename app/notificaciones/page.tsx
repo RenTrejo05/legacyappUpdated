@@ -11,7 +11,7 @@ import {
   getUnreadNotificationsByUserId,
   getNotificationsByUserId,
   markNotificationsAsRead,
-} from "@/lib/storage";
+} from "@/lib/storage-api";
 import { title } from "@/components/primitives";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -39,27 +39,27 @@ export default function NotificacionesPage() {
     }
   }, [user]);
 
-  const loadNotifications = () => {
+  const loadNotifications = async () => {
     if (!user) return;
 
     if (showAll) {
-      const all = getNotificationsByUserId(user.id);
-      setNotifications(all.reverse());
+      const all = await getNotificationsByUserId(user.id);
+      setNotifications(all);
     } else {
-      const unread = getUnreadNotificationsByUserId(user.id);
-      setNotifications(unread.reverse());
+      const unread = await getUnreadNotificationsByUserId(user.id);
+      setNotifications(unread);
     }
   };
 
-  const handleMarkAsRead = () => {
+  const handleMarkAsRead = async () => {
     if (!user) return;
 
-    markNotificationsAsRead(user.id);
-    loadNotifications();
+    await markNotificationsAsRead(user.id);
+    await loadNotifications();
   };
 
   useEffect(() => {
-    loadNotifications();
+    void loadNotifications();
   }, [showAll, user]);
 
   return (

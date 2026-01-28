@@ -6,45 +6,45 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 
 // Tipos de entidades
 export interface User {
-  id: number;
+  id: string;
   username: string;
   password: string;
 }
 
 export interface Project {
-  id: number;
+  id: string;
   name: string;
   description: string;
 }
 
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   description: string;
   status: "Pendiente" | "En Progreso" | "Completada" | "Bloqueada" | "Cancelada";
   priority: "Baja" | "Media" | "Alta" | "Crítica";
-  projectId: number;
-  assignedTo: number;
+  projectId: string;
+  assignedTo: string;
   dueDate: string;
   estimatedHours: number;
   actualHours: number;
-  createdBy: number;
+  createdBy: string;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Comment {
-  id: number;
-  taskId: number;
-  userId: number;
+  id: string;
+  taskId: string;
+  userId: string;
   commentText: string;
   createdAt: string;
 }
 
 export interface HistoryEntry {
-  id: number;
-  taskId: number;
-  userId: number;
+  id: string;
+  taskId: string;
+  userId: string;
   action: "CREATED" | "STATUS_CHANGED" | "TITLE_CHANGED" | "DELETED" | "UPDATED";
   oldValue: string;
   newValue: string;
@@ -52,8 +52,8 @@ export interface HistoryEntry {
 }
 
 export interface Notification {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   message: string;
   type: "task_assigned" | "task_updated" | "task_completed" | "comment_added";
   read: boolean;
@@ -66,8 +66,8 @@ export interface TaskFormData {
   description: string;
   status: Task["status"];
   priority: Task["priority"];
-  projectId: number;
-  assignedTo: number;
+  projectId: string;
+  assignedTo: string;
   dueDate: string;
   estimatedHours: number;
 }
@@ -78,7 +78,7 @@ export interface ProjectFormData {
 }
 
 export interface CommentFormData {
-  taskId: number;
+  taskId: string;
   commentText: string;
 }
 
@@ -86,5 +86,5 @@ export interface SearchFilters {
   text: string;
   status: Task["status"] | "";
   priority: Task["priority"] | "";
-  projectId: number;
+  projectId: string;
 }
