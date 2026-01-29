@@ -1,3 +1,5 @@
+"use server";
+
 import { MongoClient, Db, Collection } from "mongodb";
 import type {
   User,
