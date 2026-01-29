@@ -8,7 +8,6 @@ README.md
 .env.local
 .env.*.local
 yarn.lock
-pnpm-lock.yaml
 bun.lockb
 .next
 coverage
