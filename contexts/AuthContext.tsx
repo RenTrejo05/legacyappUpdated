@@ -1,7 +1,8 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
 import type { User } from "@/types";
+
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   user: User | null;
@@ -21,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Verificar si hay usuario guardado en sessionStorage
     if (typeof window !== "undefined") {
       const savedUser = sessionStorage.getItem("currentUser");
+
       if (savedUser) {
         try {
           setUser(JSON.parse(savedUser));
@@ -32,7 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (
+    username: string,
+    password: string,
+  ): Promise<boolean> => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -47,13 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const loggedUser: User = await res.json();
+
       setUser(loggedUser);
       if (typeof window !== "undefined") {
         sessionStorage.setItem("currentUser", JSON.stringify(loggedUser));
       }
+
       return true;
     } catch (e) {
       console.error("Error en login:", e);
+
       return false;
     }
   };
@@ -82,8 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 }

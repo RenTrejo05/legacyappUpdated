@@ -1,13 +1,14 @@
 "use client";
 
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Chip } from "@heroui/chip";
-import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
-import { title } from "@/components/primitives";
 import Link from "next/link";
 import { Button } from "@heroui/button";
+
+import { title } from "@/components/primitives";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function Home() {
   const { user } = useAuth();
@@ -40,8 +41,12 @@ export default function Home() {
         const projects = await projectsRes.json();
         const notifications = await notificationsRes.json();
 
-        const completed = tasks.filter((t: any) => t.status === "Completada").length;
-        const pending = tasks.filter((t: any) => t.status !== "Completada").length;
+        const completed = tasks.filter(
+          (t: any) => t.status === "Completada",
+        ).length;
+        const pending = tasks.filter(
+          (t: any) => t.status !== "Completada",
+        ).length;
         const highPriority = tasks.filter(
           (t: any) => t.priority === "Alta" || t.priority === "Crítica",
         ).length;
@@ -50,6 +55,7 @@ export default function Home() {
         const overdue = tasks.filter((t: any) => {
           if (!t.dueDate || t.status === "Completada") return false;
           const due = new Date(t.dueDate);
+
           return due < now;
         }).length;
 
@@ -148,7 +154,9 @@ export default function Home() {
             </CardHeader>
             <CardBody>
               <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold">{stats.unreadNotifications}</p>
+                <p className="text-2xl font-bold">
+                  {stats.unreadNotifications}
+                </p>
                 {stats.unreadNotifications > 0 && (
                   <Chip color="danger" size="sm">
                     Nuevas
@@ -172,10 +180,10 @@ export default function Home() {
               </p>
               <Button
                 as={Link}
-                href="/tareas"
-                color="danger"
-                variant="flat"
                 className="mt-2"
+                color="danger"
+                href="/tareas"
+                variant="flat"
               >
                 Ver Tareas
               </Button>
@@ -184,10 +192,10 @@ export default function Home() {
         )}
 
         <div className="flex gap-2">
-          <Button as={Link} href="/tareas" color="primary" variant="flat">
+          <Button as={Link} color="primary" href="/tareas" variant="flat">
             Ver Todas las Tareas
           </Button>
-          <Button as={Link} href="/proyectos" color="secondary" variant="flat">
+          <Button as={Link} color="secondary" href="/proyectos" variant="flat">
             Ver Proyectos
           </Button>
         </div>

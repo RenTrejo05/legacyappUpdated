@@ -1,7 +1,8 @@
 "use client";
 
+import type { Project, ProjectFormData } from "@/types";
+
 import { useState, useEffect } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
@@ -14,7 +15,8 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/table";
-import type { Project, ProjectFormData } from "@/types";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { title } from "@/components/primitives";
 
 export default function ProyectosPage() {
@@ -24,7 +26,7 @@ export default function ProyectosPage() {
     description: "",
   });
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -34,8 +36,10 @@ export default function ProyectosPage() {
   const loadProjects = async () => {
     try {
       const res = await fetch("/api/projects");
+
       if (!res.ok) return;
       const data: Project[] = await res.json();
+
       setProjects(data);
     } catch (e) {
       console.error("Error cargando proyectos:", e);
@@ -61,6 +65,7 @@ export default function ProyectosPage() {
   const handleAddProject = async () => {
     if (!formData.name.trim()) {
       alert("El nombre es requerido");
+
       return;
     }
 
@@ -73,6 +78,7 @@ export default function ProyectosPage() {
 
       if (!res.ok) {
         alert("No se pudo crear el proyecto");
+
         return;
       }
 
@@ -87,11 +93,13 @@ export default function ProyectosPage() {
   const handleUpdateProject = async () => {
     if (!selectedProjectId) {
       alert("Selecciona un proyecto");
+
       return;
     }
 
     if (!formData.name.trim()) {
       alert("El nombre es requerido");
+
       return;
     }
 
@@ -104,6 +112,7 @@ export default function ProyectosPage() {
 
       if (!res.ok) {
         alert("No se pudo actualizar el proyecto");
+
         return;
       }
 
@@ -118,10 +127,12 @@ export default function ProyectosPage() {
   const handleDeleteProject = async () => {
     if (!selectedProjectId) {
       alert("Selecciona un proyecto");
+
       return;
     }
 
     const project = projects.find((p) => p.id === selectedProjectId);
+
     if (!project) return;
 
     if (!confirm(`¿Eliminar proyecto: ${project.name}?`)) {
@@ -132,8 +143,10 @@ export default function ProyectosPage() {
       const res = await fetch(`/api/projects/${selectedProjectId}`, {
         method: "DELETE",
       });
+
       if (!res.ok) {
         alert("No se pudo eliminar el proyecto");
+
         return;
       }
       await loadProjects();
@@ -159,47 +172,47 @@ export default function ProyectosPage() {
           <CardBody>
             <div className="flex flex-col gap-4">
               <Input
+                isRequired
                 label="Nombre"
                 placeholder="Ingresa el nombre del proyecto"
                 value={formData.name}
+                variant="bordered"
                 onValueChange={(value) =>
                   setFormData({ ...formData, name: value })
                 }
-                isRequired
-                variant="bordered"
               />
 
               <Textarea
                 label="Descripción"
+                minRows={3}
                 placeholder="Ingresa la descripción del proyecto"
                 value={formData.description}
+                variant="bordered"
                 onValueChange={(value) =>
                   setFormData({ ...formData, description: value })
                 }
-                variant="bordered"
-                minRows={3}
               />
 
               <div className="flex gap-2 flex-wrap">
                 <Button
                   color="primary"
-                  onPress={handleAddProject}
                   isDisabled={!!selectedProjectId}
+                  onPress={handleAddProject}
                 >
                   Agregar
                 </Button>
                 <Button
                   color="secondary"
-                  onPress={handleUpdateProject}
                   isDisabled={!selectedProjectId}
+                  onPress={handleUpdateProject}
                 >
                   Actualizar
                 </Button>
                 <Button
                   color="danger"
+                  isDisabled={!selectedProjectId}
                   variant="flat"
                   onPress={handleDeleteProject}
-                  isDisabled={!selectedProjectId}
                 >
                   Eliminar
                 </Button>
@@ -227,8 +240,8 @@ export default function ProyectosPage() {
                 {projects.map((project) => (
                   <TableRow
                     key={project.id}
-                    onClick={() => handleSelectProject(project)}
                     className="cursor-pointer"
+                    onClick={() => handleSelectProject(project)}
                   >
                     <TableCell>{project.id}</TableCell>
                     <TableCell>{project.name}</TableCell>

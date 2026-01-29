@@ -1,7 +1,8 @@
 "use client";
 
+import type { Task, TaskFormData, Project, User } from "@/types";
+
 import { useState, useEffect } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
@@ -16,8 +17,9 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Chip } from "@heroui/chip";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Task, TaskFormData, Project, User } from "@/types";
 import { title } from "@/components/primitives";
 
 const STATUS_OPTIONS = [
@@ -30,7 +32,10 @@ const STATUS_OPTIONS = [
 
 const PRIORITY_OPTIONS = ["Baja", "Media", "Alta", "Crítica"];
 
-const STATUS_COLORS: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+const STATUS_COLORS: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   Pendiente: "default",
   "En Progreso": "primary",
   Completada: "success",
@@ -38,7 +43,10 @@ const STATUS_COLORS: Record<string, "default" | "primary" | "secondary" | "succe
   Cancelada: "danger",
 };
 
-const PRIORITY_COLORS: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+const PRIORITY_COLORS: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   Baja: "default",
   Media: "primary",
   Alta: "warning",
@@ -77,6 +85,7 @@ export default function TareasPage() {
           fetch("/api/projects"),
           fetch("/api/users"),
         ]);
+
         if (!tasksRes.ok || !projectsRes.ok || !usersRes.ok) return;
 
         const [tasksData, projectsData, usersData] = await Promise.all([
@@ -100,8 +109,10 @@ export default function TareasPage() {
   const loadTasks = async () => {
     try {
       const res = await fetch("/api/tasks");
+
       if (!res.ok) return;
       const loadedTasks: Task[] = await res.json();
+
       setTasks(loadedTasks);
       updateStats(loadedTasks);
     } catch (e) {
@@ -112,8 +123,10 @@ export default function TareasPage() {
   const loadProjects = async () => {
     try {
       const res = await fetch("/api/projects");
+
       if (!res.ok) return;
       const data: Project[] = await res.json();
+
       setProjects(data);
     } catch (e) {
       console.error("Error recargando proyectos:", e);
@@ -123,8 +136,10 @@ export default function TareasPage() {
   const loadUsers = async () => {
     try {
       const res = await fetch("/api/users");
+
       if (!res.ok) return;
       const data: User[] = await res.json();
+
       setUsers(data);
     } catch (e) {
       console.error("Error recargando usuarios:", e);
@@ -136,11 +151,12 @@ export default function TareasPage() {
     const completed = taskList.filter((t) => t.status === "Completada").length;
     const pending = total - completed;
     const highPriority = taskList.filter(
-      (t) => t.priority === "Alta" || t.priority === "Crítica"
+      (t) => t.priority === "Alta" || t.priority === "Crítica",
     ).length;
     const now = new Date();
     const overdue = taskList.filter((t) => {
       if (!t.dueDate || t.status === "Completada") return false;
+
       return new Date(t.dueDate) < now;
     }).length;
 
@@ -149,6 +165,7 @@ export default function TareasPage() {
 
   const handleSelectTask = (taskId: number) => {
     const task = tasks.find((t) => t.id === taskId);
+
     if (!task) return;
     setSelectedTaskId(taskId);
     setFormData({
@@ -180,6 +197,7 @@ export default function TareasPage() {
   const handleAddTask = async () => {
     if (!formData.title.trim()) {
       alert("El título es requerido");
+
       return;
     }
 
@@ -198,6 +216,7 @@ export default function TareasPage() {
 
       if (!taskRes.ok) {
         alert("No se pudo crear la tarea");
+
         return;
       }
 
@@ -238,17 +257,20 @@ export default function TareasPage() {
   const handleUpdateTask = async () => {
     if (!selectedTaskId) {
       alert("Selecciona una tarea");
+
       return;
     }
 
     if (!formData.title.trim()) {
       alert("El título es requerido");
+
       return;
     }
 
     if (!user) return;
 
     const oldTask = tasks.find((t) => t.id === selectedTaskId);
+
     if (!oldTask) return;
 
     try {
@@ -263,6 +285,7 @@ export default function TareasPage() {
 
       if (!res.ok) {
         alert("No se pudo actualizar la tarea");
+
         return;
       }
 
@@ -317,12 +340,14 @@ export default function TareasPage() {
   const handleDeleteTask = async () => {
     if (!selectedTaskId) {
       alert("Selecciona una tarea");
+
       return;
     }
 
     if (!user) return;
 
     const task = tasks.find((t) => t.id === selectedTaskId);
+
     if (!task) return;
 
     if (!confirm(`¿Eliminar tarea: ${task.title}?`)) {
@@ -348,6 +373,7 @@ export default function TareasPage() {
 
       if (!res.ok) {
         alert("No se pudo eliminar la tarea");
+
         return;
       }
 
@@ -361,11 +387,13 @@ export default function TareasPage() {
 
   const getProjectName = (projectId: number) => {
     const project = projects.find((p) => p.id === projectId);
+
     return project ? project.name : "Sin proyecto";
   };
 
   const getUserName = (userId: number) => {
     const user = users.find((u) => u.id === userId);
+
     return user ? user.username : "Sin asignar";
   };
 
@@ -410,146 +438,163 @@ export default function TareasPage() {
           <CardBody>
             <div className="flex flex-col gap-4">
               <Input
+                isRequired
                 label="Título"
                 placeholder="Ingresa el título de la tarea"
                 value={formData.title}
+                variant="bordered"
                 onValueChange={(value) =>
                   setFormData({ ...formData, title: value })
                 }
-                isRequired
-                variant="bordered"
               />
 
               <Textarea
                 label="Descripción"
+                minRows={3}
                 placeholder="Ingresa la descripción"
                 value={formData.description}
+                variant="bordered"
                 onValueChange={(value) =>
                   setFormData({ ...formData, description: value })
                 }
-                variant="bordered"
-                minRows={3}
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label="Estado"
                   selectedKeys={[formData.status]}
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
-                    setFormData({ ...formData, status: value as Task["status"] });
+
+                    setFormData({
+                      ...formData,
+                      status: value as Task["status"],
+                    });
                   }}
-                  variant="bordered"
                 >
                   {STATUS_OPTIONS.map((status) => (
-                    <SelectItem key={status}>
-                      {status}
-                    </SelectItem>
+                    <SelectItem key={status}>{status}</SelectItem>
                   ))}
                 </Select>
 
                 <Select
                   label="Prioridad"
                   selectedKeys={[formData.priority]}
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
+
                     setFormData({
                       ...formData,
                       priority: value as Task["priority"],
                     });
                   }}
-                  variant="bordered"
                 >
                   {PRIORITY_OPTIONS.map((priority) => (
-                    <SelectItem key={priority}>
-                      {priority}
-                    </SelectItem>
+                    <SelectItem key={priority}>{priority}</SelectItem>
                   ))}
                 </Select>
 
                 <Select
+                  items={[
+                    { key: "0", label: "Sin proyecto" },
+                    ...projects.map((p) => ({
+                      key: String(p.id),
+                      label: p.name,
+                    })),
+                  ]}
                   label="Proyecto"
-                  selectedKeys={formData.projectId > 0 ? [String(formData.projectId)] : []}
+                  selectedKeys={
+                    formData.projectId > 0 ? [String(formData.projectId)] : []
+                  }
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0];
+
                     setFormData({
                       ...formData,
                       projectId: value ? parseInt(value as string) : 0,
                     });
                   }}
-                  variant="bordered"
-                  items={[
-                    { key: "0", label: "Sin proyecto" },
-                    ...projects.map((p) => ({ key: String(p.id), label: p.name })),
-                  ]}
                 >
-                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                  {(item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  )}
                 </Select>
 
                 <Select
+                  items={[
+                    { key: "0", label: "Sin asignar" },
+                    ...users.map((u) => ({
+                      key: String(u.id),
+                      label: u.username,
+                    })),
+                  ]}
                   label="Asignado a"
-                  selectedKeys={formData.assignedTo > 0 ? [String(formData.assignedTo)] : []}
+                  selectedKeys={
+                    formData.assignedTo > 0 ? [String(formData.assignedTo)] : []
+                  }
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0];
+
                     setFormData({
                       ...formData,
                       assignedTo: value ? parseInt(value as string) : 0,
                     });
                   }}
-                  variant="bordered"
-                  items={[
-                    { key: "0", label: "Sin asignar" },
-                    ...users.map((u) => ({ key: String(u.id), label: u.username })),
-                  ]}
                 >
-                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                  {(item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  )}
                 </Select>
 
                 <Input
                   label="Fecha Vencimiento"
                   type="date"
                   value={formData.dueDate}
+                  variant="bordered"
                   onValueChange={(value) =>
                     setFormData({ ...formData, dueDate: value })
                   }
-                  variant="bordered"
                 />
 
                 <Input
                   label="Horas Estimadas"
-                  type="number"
                   step="0.5"
+                  type="number"
                   value={String(formData.estimatedHours)}
+                  variant="bordered"
                   onValueChange={(value) =>
                     setFormData({
                       ...formData,
                       estimatedHours: parseFloat(value) || 0,
                     })
                   }
-                  variant="bordered"
                 />
               </div>
 
               <div className="flex gap-2 flex-wrap">
                 <Button
                   color="primary"
-                  onPress={handleAddTask}
                   isDisabled={!!selectedTaskId}
+                  onPress={handleAddTask}
                 >
                   Agregar
                 </Button>
                 <Button
                   color="secondary"
-                  onPress={handleUpdateTask}
                   isDisabled={!selectedTaskId}
+                  onPress={handleUpdateTask}
                 >
                   Actualizar
                 </Button>
                 <Button
                   color="danger"
+                  isDisabled={!selectedTaskId}
                   variant="flat"
                   onPress={handleDeleteTask}
-                  isDisabled={!selectedTaskId}
                 >
                   Eliminar
                 </Button>
@@ -581,8 +626,8 @@ export default function TareasPage() {
                 {tasks.map((task) => (
                   <TableRow
                     key={task.id}
-                    onClick={() => handleSelectTask(task.id)}
                     className="cursor-pointer"
+                    onClick={() => handleSelectTask(task.id)}
                   >
                     <TableCell>{task.id}</TableCell>
                     <TableCell>{task.title}</TableCell>

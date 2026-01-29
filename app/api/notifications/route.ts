@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
-import { notificationsCollection } from "@/lib/db";
 import type { Notification } from "@/types";
+
+import { NextResponse } from "next/server";
+
+import { notificationsCollection } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +13,7 @@ export async function GET(request: Request) {
     const col = await notificationsCollection();
 
     const query: Partial<Notification> = {};
+
     if (userIdParam) {
       query.userId = parseInt(userIdParam);
     }
@@ -26,6 +29,7 @@ export async function GET(request: Request) {
     return NextResponse.json(notifications);
   } catch (error) {
     console.error("Error en /api/notifications [GET]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -60,13 +64,14 @@ export async function POST(request: Request) {
     };
 
     await col.insertOne(newNotification);
+
     return NextResponse.json(newNotification, { status: 201 });
   } catch (error) {
     console.error("Error en /api/notifications [POST]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
     );
   }
 }
-

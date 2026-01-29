@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
-import { historyCollection } from "@/lib/db";
 import type { HistoryEntry } from "@/types";
+
+import { NextResponse } from "next/server";
+
+import { historyCollection } from "@/lib/db";
 
 export async function GET(request: Request) {
   try {
@@ -11,6 +13,7 @@ export async function GET(request: Request) {
     const col = await historyCollection();
 
     const query: Partial<HistoryEntry> = {};
+
     if (taskIdParam) {
       query.taskId = parseInt(taskIdParam);
     }
@@ -19,15 +22,18 @@ export async function GET(request: Request) {
 
     if (limitParam) {
       const limit = parseInt(limitParam);
+
       if (!Number.isNaN(limit) && limit > 0) {
         cursor = cursor.limit(limit);
       }
     }
 
     const history = await cursor.toArray();
+
     return NextResponse.json(history);
   } catch (error) {
     console.error("Error en /api/history [GET]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -61,13 +67,14 @@ export async function POST(request: Request) {
     };
 
     await col.insertOne(newEntry);
+
     return NextResponse.json(newEntry, { status: 201 });
   } catch (error) {
     console.error("Error en /api/history [POST]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
     );
   }
 }
-

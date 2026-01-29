@@ -19,11 +19,6 @@ import clsx from "clsx";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  TwitterIcon,
-  GithubIcon,
-  DiscordIcon,
-} from "@/components/icons";
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
@@ -80,8 +75,8 @@ export const Navbar = () => {
                 </span>
                 <Button
                   color="danger"
-                  variant="light"
                   size="sm"
+                  variant="light"
                   onPress={handleLogout}
                 >
                   Salir
@@ -121,10 +116,10 @@ export const Navbar = () => {
               .map((item, index) => (
                 <NavbarMenuItem key={`${item.href}-${index}`}>
                   <Link
+                    as={NextLink}
                     color="foreground"
                     href={item.href}
                     size="lg"
-                    as={NextLink}
                   >
                     {item.label}
                   </Link>
@@ -135,8 +130,8 @@ export const Navbar = () => {
                 <span className="text-default-600">{user?.username}</span>
                 <Button
                   color="danger"
-                  variant="light"
                   size="sm"
+                  variant="light"
                   onPress={handleLogout}
                 >
                   Salir

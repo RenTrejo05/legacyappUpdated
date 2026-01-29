@@ -1,13 +1,15 @@
 "use client";
 
+import type { Notification } from "@/types";
+
 import { useState, useEffect } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Notification } from "@/types";
 import { title } from "@/components/primitives";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -17,7 +19,10 @@ const TYPE_LABELS: Record<string, string> = {
   comment_added: "Comentario Agregado",
 };
 
-const TYPE_COLORS: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+const TYPE_COLORS: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   task_assigned: "primary",
   task_updated: "warning",
   task_completed: "success",
@@ -43,11 +48,14 @@ export default function NotificacionesPage() {
         ? `userId=${user.id}`
         : `userId=${user.id}&unread=1`;
       const res = await fetch(`/api/notifications?${query}`);
+
       if (!res.ok) {
         setNotifications([]);
+
         return;
       }
       const data: Notification[] = await res.json();
+
       setNotifications(data);
     } catch (e) {
       console.error("Error cargando notificaciones:", e);
@@ -63,8 +71,10 @@ export default function NotificacionesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: user.id }),
       });
+
       if (!res.ok) {
         alert("No se pudieron marcar como leídas");
+
         return;
       }
       await loadNotifications();
@@ -110,9 +120,9 @@ export default function NotificacionesPage() {
               </Button>
               <Button
                 color="success"
+                isDisabled={notifications.length === 0 || showAll}
                 variant="flat"
                 onPress={handleMarkAsRead}
-                isDisabled={notifications.length === 0 || showAll}
               >
                 Marcar como Leídas
               </Button>
@@ -124,7 +134,9 @@ export default function NotificacionesPage() {
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">
-              {showAll ? "Todas las Notificaciones" : "Notificaciones No Leídas"}
+              {showAll
+                ? "Todas las Notificaciones"
+                : "Notificaciones No Leídas"}
             </h2>
           </CardHeader>
           <CardBody>

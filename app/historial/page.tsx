@@ -1,13 +1,15 @@
 "use client";
 
+import type { HistoryEntry, User } from "@/types";
+
 import { useState, useEffect } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Divider } from "@heroui/divider";
-import type { HistoryEntry, User } from "@/types";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { title } from "@/components/primitives";
 
 const ACTION_LABELS: Record<string, string> = {
@@ -18,7 +20,10 @@ const ACTION_LABELS: Record<string, string> = {
   UPDATED: "Actualizada",
 };
 
-const ACTION_COLORS: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+const ACTION_COLORS: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   CREATED: "success",
   STATUS_CHANGED: "primary",
   TITLE_CHANGED: "secondary",
@@ -36,30 +41,38 @@ export default function HistorialPage() {
     const loadUsers = async () => {
       try {
         const res = await fetch("/api/users");
+
         if (!res.ok) return;
         const data: User[] = await res.json();
+
         setUsers(data);
       } catch (e) {
         console.error("Error cargando usuarios:", e);
       }
     };
+
     loadUsers();
   }, []);
 
   const loadHistory = async () => {
     const id = parseInt(taskId);
+
     if (!id) {
       setHistory([]);
+
       return;
     }
 
     try {
       const res = await fetch(`/api/history?taskId=${id}`);
+
       if (!res.ok) {
         setHistory([]);
+
         return;
       }
       const data: HistoryEntry[] = await res.json();
+
       setHistory(data);
       setShowAll(false);
     } catch (e) {
@@ -70,11 +83,14 @@ export default function HistorialPage() {
   const loadAllHistory = async () => {
     try {
       const res = await fetch("/api/history?limit=100");
+
       if (!res.ok) {
         setHistory([]);
+
         return;
       }
       const data: HistoryEntry[] = await res.json();
+
       setHistory(data);
       setShowAll(true);
     } catch (e) {
@@ -84,6 +100,7 @@ export default function HistorialPage() {
 
   const getUserName = (userId: number) => {
     const user = users.find((u) => u.id === userId);
+
     return user ? user.username : "Desconocido";
   };
 
@@ -101,11 +118,11 @@ export default function HistorialPage() {
             <div className="flex flex-col gap-4">
               <Input
                 label="ID Tarea"
-                type="number"
                 placeholder="Ingresa el ID de la tarea"
+                type="number"
                 value={taskId}
-                onValueChange={setTaskId}
                 variant="bordered"
+                onValueChange={setTaskId}
               />
 
               <div className="flex gap-2">

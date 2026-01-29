@@ -1,12 +1,13 @@
 "use client";
 
+import type { Task, Project, User } from "@/types";
+
 import { useState } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
-import { Divider } from "@heroui/divider";
 import { Code } from "@heroui/code";
-import type { Task, Project, User } from "@/types";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { title } from "@/components/primitives";
 
 export default function ReportesPage() {
@@ -15,19 +16,25 @@ export default function ReportesPage() {
 
   const fetchTasks = async (): Promise<Task[]> => {
     const res = await fetch("/api/tasks");
+
     if (!res.ok) return [];
+
     return res.json();
   };
 
   const fetchProjects = async (): Promise<Project[]> => {
     const res = await fetch("/api/projects");
+
     if (!res.ok) return [];
+
     return res.json();
   };
 
   const fetchUsers = async (): Promise<User[]> => {
     const res = await fetch("/api/users");
+
     if (!res.ok) return [];
+
     return res.json();
   };
 
@@ -41,6 +48,7 @@ export default function ReportesPage() {
 
       tasks.forEach((task) => {
         const status = task.status || "Pendiente";
+
         statusCount[status] = (statusCount[status] || 0) + 1;
       });
 
@@ -51,8 +59,10 @@ export default function ReportesPage() {
 
       reportText += "\nTareas por Prioridad:\n";
       const priorityCount: Record<string, number> = {};
+
       tasks.forEach((task) => {
         const priority = task.priority || "Media";
+
         priorityCount[priority] = (priorityCount[priority] || 0) + 1;
       });
       Object.keys(priorityCount).forEach((priority) => {
@@ -69,6 +79,7 @@ export default function ReportesPage() {
       reportText += "Tareas por Proyecto:\n";
       projects.forEach((project) => {
         const count = tasks.filter((t) => t.projectId === project.id).length;
+
         reportText += `  ${project.name}: ${count} tareas\n`;
       });
 
@@ -79,6 +90,7 @@ export default function ReportesPage() {
       reportText += "Tareas por Usuario:\n";
       users.forEach((user) => {
         const count = tasks.filter((t) => t.assignedTo === user.id).length;
+
         reportText += `  ${user.username}: ${count} tareas asignadas\n`;
       });
 
@@ -95,7 +107,8 @@ export default function ReportesPage() {
       fetchUsers(),
     ]);
 
-    let csv = "ID,Título,Estado,Prioridad,Proyecto,Asignado a,Fecha Vencimiento\n";
+    let csv =
+      "ID,Título,Estado,Prioridad,Proyecto,Asignado a,Fecha Vencimiento\n";
 
     tasks.forEach((task) => {
       const project = projects.find((p) => p.id === task.projectId);
@@ -109,6 +122,7 @@ export default function ReportesPage() {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
+
     link.setAttribute("href", url);
     link.setAttribute("download", "export_tasks.csv");
     link.style.visibility = "hidden";
@@ -129,10 +143,7 @@ export default function ReportesPage() {
           </CardHeader>
           <CardBody>
             <div className="flex flex-wrap gap-2">
-              <Button
-                color="primary"
-                onPress={() => generateReport("tasks")}
-              >
+              <Button color="primary" onPress={() => generateReport("tasks")}>
                 Reporte de Tareas
               </Button>
               <Button
@@ -141,10 +152,7 @@ export default function ReportesPage() {
               >
                 Reporte de Proyectos
               </Button>
-              <Button
-                color="success"
-                onPress={() => generateReport("users")}
-              >
+              <Button color="success" onPress={() => generateReport("users")}>
                 Reporte de Usuarios
               </Button>
               <Button color="warning" variant="flat" onPress={exportCSV}>

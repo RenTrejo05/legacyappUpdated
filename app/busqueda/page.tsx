@@ -1,7 +1,8 @@
 "use client";
 
+import type { Task, SearchFilters, Project } from "@/types";
+
 import { useState, useEffect } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -15,7 +16,8 @@ import {
   TableCell,
 } from "@heroui/table";
 import { Chip } from "@heroui/chip";
-import type { Task, SearchFilters, Project } from "@/types";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { title } from "@/components/primitives";
 
 const STATUS_OPTIONS = [
@@ -29,7 +31,10 @@ const STATUS_OPTIONS = [
 
 const PRIORITY_OPTIONS = ["", "Baja", "Media", "Alta", "Crítica"];
 
-const STATUS_COLORS: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+const STATUS_COLORS: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   Pendiente: "default",
   "En Progreso": "primary",
   Completada: "success",
@@ -37,7 +42,10 @@ const STATUS_COLORS: Record<string, "default" | "primary" | "secondary" | "succe
   Cancelada: "danger",
 };
 
-const PRIORITY_COLORS: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+const PRIORITY_COLORS: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   Baja: "default",
   Media: "primary",
   Alta: "warning",
@@ -58,61 +66,72 @@ export default function BusquedaPage() {
     const loadProjects = async () => {
       try {
         const res = await fetch("/api/projects");
+
         if (!res.ok) return;
         const data: Project[] = await res.json();
+
         setProjects(data);
       } catch (e) {
         console.error("Error cargando proyectos:", e);
       }
     };
+
     loadProjects();
   }, []);
 
   const handleSearch = async () => {
     try {
       const res = await fetch("/api/tasks");
+
       if (!res.ok) {
         setResults([]);
+
         return;
       }
       const allTasks: Task[] = await res.json();
 
       const filtered = allTasks.filter((task) => {
-      // Filtro de texto
-      if (filters.text) {
-        const searchText = filters.text.toLowerCase();
-        const matchesTitle = task.title.toLowerCase().includes(searchText);
-        const matchesDescription = task.description
-          .toLowerCase()
-          .includes(searchText);
-        if (!matchesTitle && !matchesDescription) {
+        // Filtro de texto
+        if (filters.text) {
+          const searchText = filters.text.toLowerCase();
+          const matchesTitle = task.title.toLowerCase().includes(searchText);
+          const matchesDescription = task.description
+            .toLowerCase()
+            .includes(searchText);
+
+          if (!matchesTitle && !matchesDescription) {
+            return false;
+          }
+        }
+
+        // Filtro de estado
+        if (filters.status && task.status !== filters.status) {
           return false;
         }
-      }
 
-      // Filtro de estado
-      if (filters.status && task.status !== filters.status) {
-        return false;
-      }
+        // Filtro de prioridad
+        if (filters.priority && task.priority !== filters.priority) {
+          return false;
+        }
 
-      // Filtro de prioridad
-      if (filters.priority && task.priority !== filters.priority) {
-        return false;
-      }
+        // Filtro de proyecto
+        if (filters.projectId > 0 && task.projectId !== filters.projectId) {
+          return false;
+        }
 
-      // Filtro de proyecto
-      if (filters.projectId > 0 && task.projectId !== filters.projectId) {
-        return false;
-      }
+        return true;
+      });
 
-      return true;
-    });
-
-    setResults(filtered);
+      setResults(filtered);
+    } catch (error) {
+      console.error("Error en búsqueda:", error);
+      setResults([]);
+    }
   };
 
   const getProjectName = (projectId: number) => {
     const project = projects.find((p) => p.id === projectId);
+
     return project ? project.name : "Sin proyecto";
   };
 
@@ -132,43 +151,43 @@ export default function BusquedaPage() {
                 label="Texto"
                 placeholder="Buscar en título o descripción"
                 value={filters.text}
+                variant="bordered"
                 onValueChange={(value) =>
                   setFilters({ ...filters, text: value })
                 }
-                variant="bordered"
               />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Select
                   label="Estado"
                   selectedKeys={filters.status ? [filters.status] : []}
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
+
                     setFilters({
                       ...filters,
                       status: (value || "") as Task["status"] | "",
                     });
                   }}
-                  variant="bordered"
                 >
                   {STATUS_OPTIONS.map((status) => (
-                    <SelectItem key={status}>
-                      {status || "Todos"}
-                    </SelectItem>
+                    <SelectItem key={status}>{status || "Todos"}</SelectItem>
                   ))}
                 </Select>
 
                 <Select
                   label="Prioridad"
                   selectedKeys={filters.priority ? [filters.priority] : []}
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0] as string;
+
                     setFilters({
                       ...filters,
                       priority: (value || "") as Task["priority"] | "",
                     });
                   }}
-                  variant="bordered"
                 >
                   {PRIORITY_OPTIONS.map((priority) => (
                     <SelectItem key={priority}>
@@ -178,29 +197,35 @@ export default function BusquedaPage() {
                 </Select>
 
                 <Select
+                  className="md:col-span-2"
+                  items={[
+                    { key: "0", label: "Todos" },
+                    ...projects.map((p) => ({
+                      key: String(p.id),
+                      label: p.name,
+                    })),
+                  ]}
                   label="Proyecto"
                   selectedKeys={
                     filters.projectId > 0 ? [String(filters.projectId)] : []
                   }
+                  variant="bordered"
                   onSelectionChange={(keys) => {
                     const value = Array.from(keys)[0];
+
                     setFilters({
                       ...filters,
                       projectId: value ? parseInt(value as string) : 0,
                     });
                   }}
-                  variant="bordered"
-                  className="md:col-span-2"
-                  items={[
-                    { key: "0", label: "Todos" },
-                    ...projects.map((p) => ({ key: String(p.id), label: p.name })),
-                  ]}
                 >
-                  {(item) => <SelectItem key={item.key}>{item.label}</SelectItem>}
+                  {(item) => (
+                    <SelectItem key={item.key}>{item.label}</SelectItem>
+                  )}
                 </Select>
               </div>
 
-              <Button color="primary" onPress={handleSearch} size="lg">
+              <Button color="primary" size="lg" onPress={handleSearch}>
                 Buscar
               </Button>
             </div>

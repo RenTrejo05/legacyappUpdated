@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { usersCollection } from "@/lib/db";
 
 export async function POST(request: Request) {
@@ -28,10 +29,10 @@ export async function POST(request: Request) {
     return NextResponse.json(safeUser);
   } catch (error) {
     console.error("Error en /api/auth/login", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
     );
   }
 }
-

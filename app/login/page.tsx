@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
-import { Link } from "@heroui/link";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { title } from "@/components/primitives";
 
@@ -23,13 +23,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     const success = await login(username, password);
-    
+
     if (success) {
       router.push("/");
     } else {
       setError("Credenciales inválidas. Intenta nuevamente.");
     }
-    
+
     setIsLoading(false);
   };
 
@@ -43,36 +43,35 @@ export default function LoginPage() {
           </p>
         </CardHeader>
         <CardBody className="pb-6">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
             <Input
+              isRequired
               label="Usuario"
               placeholder="Ingresa tu usuario"
               value={username}
-              onValueChange={setUsername}
-              isRequired
-              autoFocus
               variant="bordered"
+              onValueChange={setUsername}
             />
             <Input
+              isRequired
               label="Contraseña"
               placeholder="Ingresa tu contraseña"
               type="password"
               value={password}
-              onValueChange={setPassword}
-              isRequired
               variant="bordered"
+              onValueChange={setPassword}
             />
-            
+
             {error && (
               <div className="text-danger text-sm text-center">{error}</div>
             )}
 
             <Button
-              type="submit"
-              color="primary"
-              size="lg"
-              isLoading={isLoading}
               className="w-full"
+              color="primary"
+              isLoading={isLoading}
+              size="lg"
+              type="submit"
             >
               Entrar
             </Button>

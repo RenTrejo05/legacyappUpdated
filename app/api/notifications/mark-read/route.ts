@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { notificationsCollection } from "@/lib/db";
 
 export async function POST(request: Request) {
@@ -13,15 +14,16 @@ export async function POST(request: Request) {
     }
 
     const col = await notificationsCollection();
+
     await col.updateMany({ userId, read: false }, { $set: { read: true } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error en /api/notifications/mark-read [POST]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
     );
   }
 }
-

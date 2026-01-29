@@ -1,14 +1,18 @@
-import { NextResponse } from "next/server";
-import { tasksCollection } from "@/lib/db";
 import type { Task } from "@/types";
+
+import { NextResponse } from "next/server";
+
+import { tasksCollection } from "@/lib/db";
 
 export async function GET() {
   try {
     const col = await tasksCollection();
     const tasks = await col.find<Task>({}).sort({ id: 1 }).toArray();
+
     return NextResponse.json(tasks);
   } catch (error) {
     console.error("Error en /api/tasks [GET]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -45,13 +49,14 @@ export async function POST(request: Request) {
     };
 
     await col.insertOne(newTask);
+
     return NextResponse.json(newTask, { status: 201 });
   } catch (error) {
     console.error("Error en /api/tasks [POST]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
     );
   }
 }
-

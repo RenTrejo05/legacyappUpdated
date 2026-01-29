@@ -21,7 +21,12 @@ export interface Task {
   id: number;
   title: string;
   description: string;
-  status: "Pendiente" | "En Progreso" | "Completada" | "Bloqueada" | "Cancelada";
+  status:
+    | "Pendiente"
+    | "En Progreso"
+    | "Completada"
+    | "Bloqueada"
+    | "Cancelada";
   priority: "Baja" | "Media" | "Alta" | "Crítica";
   projectId: number;
   assignedTo: number;
@@ -45,7 +50,12 @@ export interface HistoryEntry {
   id: number;
   taskId: number;
   userId: number;
-  action: "CREATED" | "STATUS_CHANGED" | "TITLE_CHANGED" | "DELETED" | "UPDATED";
+  action:
+    | "CREATED"
+    | "STATUS_CHANGED"
+    | "TITLE_CHANGED"
+    | "DELETED"
+    | "UPDATED";
   oldValue: string;
   newValue: string;
   timestamp: string;

@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
-import { usersCollection } from "@/lib/db";
 import type { User } from "@/types";
+
+import { NextResponse } from "next/server";
+
+import { usersCollection } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -13,6 +15,7 @@ export async function GET() {
     return NextResponse.json(users);
   } catch (error) {
     console.error("Error en /api/users [GET]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
@@ -34,6 +37,7 @@ export async function POST(request: Request) {
     const usersCol = await usersCollection();
 
     const existing = await usersCol.findOne({ username: body.username });
+
     if (existing) {
       return NextResponse.json(
         { error: "El usuario ya existe" },
@@ -54,13 +58,14 @@ export async function POST(request: Request) {
     await usersCol.insertOne(newUser);
 
     const { password, ...safeUser } = newUser;
+
     return NextResponse.json(safeUser, { status: 201 });
   } catch (error) {
     console.error("Error en /api/users [POST]", error);
+
     return NextResponse.json(
       { error: "Error interno del servidor" },
       { status: 500 },
     );
   }
 }
-

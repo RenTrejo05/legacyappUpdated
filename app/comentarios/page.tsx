@@ -1,14 +1,16 @@
 "use client";
 
+import type { Comment, User, Task } from "@/types";
+
 import { useState, useEffect } from "react";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
+
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Comment, User, Task } from "@/types";
 import { title } from "@/components/primitives";
 
 export default function ComentariosPage() {
@@ -22,30 +24,38 @@ export default function ComentariosPage() {
     const loadUsers = async () => {
       try {
         const res = await fetch("/api/users");
+
         if (!res.ok) return;
         const data: User[] = await res.json();
+
         setUsers(data);
       } catch (e) {
         console.error("Error cargando usuarios:", e);
       }
     };
+
     loadUsers();
   }, []);
 
   const loadComments = async () => {
     const id = parseInt(taskId);
+
     if (!id) {
       setComments([]);
+
       return;
     }
 
     try {
       const res = await fetch(`/api/comments?taskId=${id}`);
+
       if (!res.ok) {
         setComments([]);
+
         return;
       }
       const data: Comment[] = await res.json();
+
       setComments(data);
     } catch (e) {
       console.error("Error cargando comentarios:", e);
@@ -54,13 +64,16 @@ export default function ComentariosPage() {
 
   const handleAddComment = async () => {
     const id = parseInt(taskId);
+
     if (!id) {
       alert("ID de tarea requerido");
+
       return;
     }
 
     if (!commentText.trim()) {
       alert("El comentario no puede estar vacío");
+
       return;
     }
 
@@ -68,11 +81,13 @@ export default function ComentariosPage() {
 
     try {
       const taskRes = await fetch(`/api/tasks/${id}`);
+
       if (!taskRes.ok) {
         alert("Tarea no encontrada");
+
         return;
       }
-      await taskRes.json() as Task;
+      (await taskRes.json()) as Task;
 
       const res = await fetch("/api/comments", {
         method: "POST",
@@ -86,6 +101,7 @@ export default function ComentariosPage() {
 
       if (!res.ok) {
         alert("No se pudo agregar el comentario");
+
         return;
       }
 
@@ -99,6 +115,7 @@ export default function ComentariosPage() {
 
   const getUserName = (userId: number) => {
     const foundUser = users.find((u) => u.id === userId);
+
     return foundUser ? foundUser.username : "Usuario desconocido";
   };
 
@@ -116,20 +133,20 @@ export default function ComentariosPage() {
             <div className="flex flex-col gap-4">
               <Input
                 label="ID Tarea"
-                type="number"
                 placeholder="Ingresa el ID de la tarea"
+                type="number"
                 value={taskId}
-                onValueChange={setTaskId}
                 variant="bordered"
+                onValueChange={setTaskId}
               />
 
               <Textarea
                 label="Comentario"
+                minRows={3}
                 placeholder="Escribe tu comentario aquí"
                 value={commentText}
-                onValueChange={setCommentText}
                 variant="bordered"
-                minRows={3}
+                onValueChange={setCommentText}
               />
 
               <div className="flex gap-2">
@@ -157,7 +174,9 @@ export default function ComentariosPage() {
                 Ingresa un ID de tarea para ver los comentarios
               </p>
             ) : comments.length === 0 ? (
-              <p className="text-default-500">No hay comentarios para esta tarea</p>
+              <p className="text-default-500">
+                No hay comentarios para esta tarea
+              </p>
             ) : (
               <div className="flex flex-col gap-4">
                 {comments.map((comment) => (
