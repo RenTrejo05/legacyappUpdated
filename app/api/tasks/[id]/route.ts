@@ -23,6 +23,7 @@ export async function GET(
 
     return NextResponse.json(task);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/tasks/[id] [GET]", error);
 
     return NextResponse.json(
@@ -62,6 +63,7 @@ export async function PUT(
 
     return NextResponse.json(updated);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/tasks/[id] [PUT]", error);
 
     return NextResponse.json(
@@ -90,6 +92,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/tasks/[id] [DELETE]", error);
 
     return NextResponse.json(

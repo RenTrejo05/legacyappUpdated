@@ -11,6 +11,7 @@ export async function GET() {
 
     return NextResponse.json(tasks);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/tasks [GET]", error);
 
     return NextResponse.json(
@@ -52,6 +53,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newTask, { status: 201 });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/tasks [POST]", error);
 
     return NextResponse.json(

@@ -14,6 +14,7 @@ export async function GET() {
 
     return NextResponse.json(users);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/users [GET]", error);
 
     return NextResponse.json(
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(safeUser, { status: 201 });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/users [POST]", error);
 
     return NextResponse.json(

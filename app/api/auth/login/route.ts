@@ -28,6 +28,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(safeUser);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/auth/login", error);
 
     return NextResponse.json(

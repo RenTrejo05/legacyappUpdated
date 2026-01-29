@@ -1,5 +1,3 @@
-"use server";
-
 import type {
   User,
   Project,
@@ -34,17 +32,15 @@ function getMongoClient(): MongoClient {
 
 export async function getDb(): Promise<Db> {
   const client = getMongoClient();
-
-  // Intentar conectar si no está conectado
+  // En Vercel/serverless el driver conecta en la primera operación; no llamar connect() evita timeouts.
   try {
     await client.connect();
   } catch (err) {
-    // Si ya está conectado, ignorar el error
-    if (!String(err).includes("topology")) {
+    const msg = String(err);
+    if (!msg.includes("topology") && !msg.includes("already connected")) {
       throw err;
     }
   }
-
   return client.db("legacyapp");
 }
 

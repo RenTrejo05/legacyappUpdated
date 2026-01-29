@@ -32,6 +32,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(history);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/history [GET]", error);
 
     return NextResponse.json(
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newEntry, { status: 201 });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/history [POST]", error);
 
     return NextResponse.json(

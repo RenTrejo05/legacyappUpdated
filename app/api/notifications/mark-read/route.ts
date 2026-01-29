@@ -19,6 +19,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/notifications/mark-read [POST]", error);
 
     return NextResponse.json(

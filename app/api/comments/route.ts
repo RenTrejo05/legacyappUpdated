@@ -20,6 +20,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(comments);
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/comments [GET]", error);
 
     return NextResponse.json(
@@ -55,6 +56,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newComment, { status: 201 });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/comments [POST]", error);
 
     return NextResponse.json(

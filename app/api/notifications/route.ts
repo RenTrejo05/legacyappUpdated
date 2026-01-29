@@ -67,6 +67,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newNotification, { status: 201 });
   } catch (error) {
+    // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/notifications [POST]", error);
 
     return NextResponse.json(
