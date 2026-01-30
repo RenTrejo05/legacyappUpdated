@@ -55,7 +55,7 @@ export default function Home() {
 
   return (
     <ProtectedRoute>
-      <div className="flex flex-col gap-8 py-6">
+      <div className="flex flex-col gap-6 py-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className={title()}>Dashboard</h1>
@@ -82,62 +82,66 @@ export default function Home() {
           )}
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {modulesToShow.map((module) => (
-            <Link key={module.href} href={module.href} className="block">
-              <Card
-                isPressable
-                className="h-full border border-default-200/50 bg-default-50/50 dark:bg-default-100/20 hover:border-primary/50 hover:bg-primary/5 transition-colors"
-              >
-                <CardBody className="flex flex-col items-center justify-center gap-3 p-6 min-h-[140px]">
-                  <div className="size-14 flex items-center justify-center text-default-600">
-                    <ModuleIcon icon={module.icon} className="size-12" />
-                  </div>
-                  <div className="flex items-center gap-1.5 w-full justify-center">
-                    <span className="font-medium text-default-800 text-center">
-                      {module.label}
-                    </span>
-                    {module.role === "admin" && (
-                      <LockIcon className="size-4 shrink-0 text-default-400" />
-                    )}
-                  </div>
-                </CardBody>
-              </Card>
-            </Link>
-          ))}
+        <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {modulesToShow.map((module) => (
+              <Link key={module.href} href={module.href} className="block">
+                <Card
+                  isPressable
+                  className="h-[180px] border border-default-200/50 bg-default-50/80 dark:bg-default-100/40 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                >
+                  <CardBody className="flex flex-col items-center justify-center gap-3 p-6">
+                    <div className="size-14 flex items-center justify-center text-default-600">
+                      <ModuleIcon icon={module.icon} className="size-12" />
+                    </div>
+                    <div className="flex items-center gap-1.5 w-full justify-center">
+                      <span className="font-medium text-default-800 text-center">
+                        {module.label}
+                      </span>
+                      {module.role === "admin" && (
+                        <LockIcon className="size-4 shrink-0 text-default-400" />
+                      )}
+                    </div>
+                  </CardBody>
+                </Card>
+              </Link>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-default-100/50">
-            <CardBody className="py-4">
-              <p className="text-sm text-default-600">Total tareas</p>
-              <p className="text-2xl font-semibold">{stats.totalTasks}</p>
-            </CardBody>
-          </Card>
-          <Card className="bg-default-100/50">
-            <CardBody className="py-4">
-              <p className="text-sm text-default-600">Completadas</p>
-              <p className="text-2xl font-semibold text-success">
-                {stats.completedTasks}
-              </p>
-            </CardBody>
-          </Card>
-          <Card className="bg-default-100/50">
-            <CardBody className="py-4">
-              <p className="text-sm text-default-600">Notificaciones</p>
-              <p className="text-2xl font-semibold">
-                {stats.unreadNotifications}
-              </p>
-            </CardBody>
-          </Card>
-          <Card className="bg-default-100/50">
-            <CardBody className="py-4">
-              <p className="text-sm text-default-600">Vencidas</p>
-              <p className="text-2xl font-semibold text-danger">
-                {stats.overdueTasks}
-              </p>
-            </CardBody>
-          </Card>
+        <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg p-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="bg-default-100/80 h-full">
+              <CardBody className="py-6 flex flex-col justify-center">
+                <p className="text-sm text-default-600">Total tareas</p>
+                <p className="text-2xl font-semibold">{stats.totalTasks}</p>
+              </CardBody>
+            </Card>
+            <Card className="bg-default-100/80 h-full">
+              <CardBody className="py-6 flex flex-col justify-center">
+                <p className="text-sm text-default-600">Completadas</p>
+                <p className="text-2xl font-semibold text-success">
+                  {stats.completedTasks}
+                </p>
+              </CardBody>
+            </Card>
+            <Card className="bg-default-100/80 h-full">
+              <CardBody className="py-6 flex flex-col justify-center">
+                <p className="text-sm text-default-600">Notificaciones</p>
+                <p className="text-2xl font-semibold">
+                  {stats.unreadNotifications}
+                </p>
+              </CardBody>
+            </Card>
+            <Card className="bg-default-100/80 h-full">
+              <CardBody className="py-6 flex flex-col justify-center">
+                <p className="text-sm text-default-600">Vencidas</p>
+                <p className="text-2xl font-semibold text-danger">
+                  {stats.overdueTasks}
+                </p>
+              </CardBody>
+            </Card>
+          </div>
         </div>
       </div>
     </ProtectedRoute>
