@@ -12,17 +12,22 @@ export async function GET(request: Request) {
 
     const col = await notificationsCollection();
 
-    const query: Partial<Notification> = {};
+    // Usar Record<string, unknown> para permitir $in en la query
+    const query: Record<string, unknown> = {};
 
     if (userIdParam) {
-      query.userId = parseInt(userIdParam);
+      const userIdNum = Number(userIdParam);
+      if (!Number.isNaN(userIdNum)) {
+        // Coincidir tanto si en la DB está guardado como number como string
+        query.userId = { $in: [userIdNum, userIdParam] };
+      }
     }
     if (unreadParam === "1") {
       query.read = false;
     }
 
     const notifications = await col
-      .find<Notification>(query)
+      .find<Notification>(query as Partial<Notification>)
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -56,8 +61,18 @@ export async function POST(request: Request) {
     const nextId = last ? (last.id ?? 0) + 1 : 1;
     const now = new Date().toISOString();
 
+    // Asegurar que userId sea número (los formularios pueden enviar string)
+    const userId = Number(body.userId);
+    if (Number.isNaN(userId)) {
+      return NextResponse.json(
+        { error: "userId debe ser un número válido" },
+        { status: 400 },
+      );
+    }
+
     const newNotification: Notification = {
       ...body,
+      userId,
       id: nextId,
       read: false,
       createdAt: now,
