@@ -55,7 +55,7 @@ export default function Home() {
 
   return (
     <ProtectedRoute>
-      <div className="flex flex-col gap-6 py-2">
+      <div className="flex flex-col gap-2 py-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className={title()}>Dashboard</h1>
@@ -82,7 +82,7 @@ export default function Home() {
           )}
         </div>
 
-        <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg p-6">
+        <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {modulesToShow.map((module) => (
               <Link key={module.href} href={module.href} className="block">
@@ -109,7 +109,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg p-6">
+        <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-default-100/80 h-full">
               <CardBody className="py-6 flex flex-col justify-center">
