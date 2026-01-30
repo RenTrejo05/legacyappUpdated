@@ -88,7 +88,7 @@ export default function Home() {
               <Link key={module.href} href={module.href} className="block">
                 <Card
                   isPressable
-                  className="h-[180px] border border-default-200/50 bg-default-50/80 dark:bg-default-100/40 hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                  className="h-full w-full border border-default-200/50 bg-default-50/80 dark:bg-default-100/40 hover:border-primary/50 hover:bg-primary/5 transition-colors"
                 >
                   <CardBody className="flex flex-col items-center justify-center gap-3 p-6">
                     <div className="size-14 flex items-center justify-center text-default-600">
