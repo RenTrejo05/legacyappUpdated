@@ -52,14 +52,19 @@ export async function PUT(
       );
     }
 
-    const updated: Task = {
-      ...existing,
+    const updateData = {
       ...body,
-      id: taskId,
       updatedAt: new Date().toISOString(),
     };
 
-    await col.replaceOne({ id: taskId }, updated);
+    // Remove _id if it exists in the update data to prevent immutable field error
+    if ("_id" in updateData) {
+      delete (updateData as any)._id;
+    }
+
+    await col.updateOne({ id: taskId }, { $set: updateData });
+
+    const updated = await col.findOne<Task>({ id: taskId });
 
     return NextResponse.json(updated);
   } catch (error) {
