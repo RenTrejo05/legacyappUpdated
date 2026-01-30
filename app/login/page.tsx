@@ -10,8 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { title } from "@/components/primitives";
 
 export default function LoginPage() {
-  const [username, setUsername] = useState("admin");
-  const [password, setPassword] = useState("admin");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -35,10 +35,10 @@ export default function LoginPage() {
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-lg">
         <CardHeader className="flex flex-col gap-1 items-center pt-6">
           <h1 className={title({ size: "lg" })}>Task Manager</h1>
-          <p className="text-small text-default-500">
+          <p className="text-small text-default-500 pt-2">
             Inicia sesión para continuar
           </p>
         </CardHeader>
@@ -76,12 +76,6 @@ export default function LoginPage() {
               Entrar
             </Button>
 
-            <div className="text-center text-small text-default-500">
-              <p>Usuarios de prueba:</p>
-              <p className="text-xs mt-1">
-                admin/admin, user1/user1, user2/user2
-              </p>
-            </div>
           </form>
         </CardBody>
       </Card>
