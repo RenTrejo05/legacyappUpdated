@@ -9,6 +9,11 @@ export const siteConfig = {
       href: "/",
     },
     {
+      label: "Usuarios",
+      href: "/usuarios",
+      role: "admin",
+    },
+    {
       label: "Tareas",
       href: "/tareas",
     },

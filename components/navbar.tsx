@@ -41,6 +41,11 @@ export const Navbar = () => {
           <ul className="hidden lg:flex gap-4 justify-start ml-2">
             {siteConfig.navItems
               .filter((item) => item.href !== "/login")
+              .filter(
+                (item) =>
+                  !("role" in item && item.role) ||
+                  user?.role === (item as { role?: string }).role,
+              )
               .map((item) => (
                 <NavbarItem key={item.href}>
                   <NextLink
@@ -113,6 +118,11 @@ export const Navbar = () => {
           <div className="mx-4 mt-2 flex flex-col gap-2">
             {siteConfig.navItems
               .filter((item) => item.href !== "/login")
+              .filter(
+                (item) =>
+                  !("role" in item && item.role) ||
+                  user?.role === (item as { role?: string }).role,
+              )
               .map((item, index) => (
                 <NavbarMenuItem key={`${item.href}-${index}`}>
                   <Link

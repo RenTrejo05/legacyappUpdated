@@ -1,4 +1,4 @@
-import type { User } from "@/types";
+import type { User, UserRole } from "@/types";
 
 import { NextResponse } from "next/server";
 
@@ -12,7 +12,9 @@ export async function GET() {
       .project<Omit<User, "password">>({ password: 0 })
       .toArray();
 
-    return NextResponse.json(users);
+    return NextResponse.json(
+      users.map((u) => ({ ...u, role: u.role ?? "user" })),
+    );
   } catch (error) {
     // eslint-disable-next-line no-console -- logging server errors for debugging
     console.error("Error en /api/users [GET]", error);
@@ -26,7 +28,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as User;
+    const body = (await request.json()) as Pick<User, "username" | "password"> & {
+      role?: UserRole;
+    };
 
     if (!body.username || !body.password) {
       return NextResponse.json(
@@ -46,7 +50,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Calcular id incremental simple basado en el máximo actual
+    const role: UserRole =
+      body.role === "admin" || body.role === "user" ? body.role : "user";
+
     const lastUser = await usersCol.find().sort({ id: -1 }).limit(1).next();
     const nextId = lastUser ? (lastUser.id ?? 0) + 1 : 1;
 
@@ -54,6 +60,7 @@ export async function POST(request: Request) {
       id: nextId,
       username: body.username,
       password: body.password,
+      role,
     };
 
     await usersCol.insertOne(newUser);

@@ -22,12 +22,12 @@ export default function LoginPage() {
     setError("");
     setIsLoading(true);
 
-    const success = await login(username, password);
+    const result = await login(username, password);
 
-    if (success) {
+    if (result.success) {
       router.push("/");
     } else {
-      setError("Credenciales inválidas. Intenta nuevamente.");
+      setError(result.error ?? "Credenciales inválidas. Intenta nuevamente.");
     }
 
     setIsLoading(false);

@@ -5,10 +5,13 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 };
 
 // Tipos de entidades
+export type UserRole = "user" | "admin";
+
 export interface User {
   id: number;
   username: string;
   password: string;
+  role?: UserRole; // por defecto "user"; solo admin puede crear usuarios
 }
 
 export interface Project {
