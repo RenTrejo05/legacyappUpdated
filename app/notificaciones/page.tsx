@@ -84,6 +84,27 @@ export default function NotificacionesPage() {
     }
   };
 
+  const handleMarkSingleAsRead = async (notificationId: number) => {
+    try {
+      const res = await fetch(`/api/notifications/${notificationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ read: true }),
+      });
+
+      if (!res.ok) {
+        alert("No se pudo marcar la notificación como leída");
+
+        return;
+      }
+
+      await loadNotifications();
+    } catch (e) {
+      console.error("Error marcando notificación como leída:", e);
+      alert("Error al marcar la notificación como leída");
+    }
+  };
+
   useEffect(() => {
     loadNotifications();
   }, [showAll, user]);
@@ -165,9 +186,21 @@ export default function NotificacionesPage() {
                           </Chip>
                         )}
                       </div>
-                      <span className="text-xs text-default-500">
-                        {new Date(notif.createdAt).toLocaleString()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-default-500">
+                          {new Date(notif.createdAt).toLocaleString()}
+                        </span>
+                        {!notif.read && (
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="success"
+                            onPress={() => handleMarkSingleAsRead(notif.id)}
+                          >
+                            Marcar leída
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-default-700">{notif.message}</p>
                     <Divider />

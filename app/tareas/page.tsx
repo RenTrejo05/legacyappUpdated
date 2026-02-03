@@ -385,6 +385,68 @@ export default function TareasPage() {
     }
   };
 
+  const handleCompleteTask = async (task: Task) => {
+    if (!user) return;
+
+    if (task.status === "Completada") return;
+
+    try {
+      const res = await fetch(`/api/tasks/${task.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Completada" }),
+      });
+
+      if (!res.ok) {
+        alert("No se pudo completar la tarea");
+
+        return;
+      }
+
+      await fetch("/api/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: task.id,
+          userId: user.id,
+          action: "STATUS_CHANGED",
+          oldValue: task.status,
+          newValue: "Completada",
+        }),
+      });
+
+      if (task.assignedTo > 0) {
+        await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: task.assignedTo,
+            message: `Tarea completada: ${task.title}`,
+            type: "task_completed",
+          }),
+        });
+      }
+
+      if (selectedTaskId === task.id) {
+        setFormData({
+          title: task.title,
+          description: task.description,
+          status: "Completada",
+          priority: task.priority,
+          projectId: task.projectId,
+          assignedTo: task.assignedTo,
+          dueDate: task.dueDate,
+          estimatedHours: task.estimatedHours,
+        });
+      }
+
+      await loadTasks();
+    } catch (e) {
+      console.error("Error completando tarea:", e);
+      alert("Error al completar la tarea");
+    }
+  };
+
   const getProjectName = (projectId: number) => {
     const project = projects.find((p) => p.id === projectId);
 
@@ -621,6 +683,7 @@ export default function TareasPage() {
                 <TableColumn>PROYECTO</TableColumn>
                 <TableColumn>ASIGNADO</TableColumn>
                 <TableColumn>VENCIMIENTO</TableColumn>
+                <TableColumn>ACCIONES</TableColumn>
               </TableHeader>
               <TableBody emptyContent="No hay tareas">
                 {tasks.map((task) => (
@@ -655,6 +718,22 @@ export default function TareasPage() {
                       {task.dueDate
                         ? new Date(task.dueDate).toLocaleDateString()
                         : "Sin fecha"}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size="sm"
+                        color="success"
+                        variant="flat"
+                        isDisabled={task.status === "Completada"}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleCompleteTask(task);
+                        }}
+                      >
+                        {task.status === "Completada"
+                          ? "Completada"
+                          : "Marcar completada"}
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
