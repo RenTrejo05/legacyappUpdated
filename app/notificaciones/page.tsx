@@ -145,7 +145,7 @@ export default function NotificacionesPage() {
                 variant="flat"
                 onPress={handleMarkAsRead}
               >
-                Marcar como Leídas
+                Marcar Todas Como Leídas
               </Button>
             </div>
           </CardBody>
