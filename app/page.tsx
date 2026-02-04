@@ -111,36 +111,44 @@ export default function Home() {
 
         <div className="bg-default-50/50 dark:bg-default-100/30 rounded-lg">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-default-100/80 h-full">
-              <CardBody className="py-6 flex flex-col justify-center">
-                <p className="text-sm text-default-600">Total tareas</p>
-                <p className="text-2xl font-semibold">{stats.totalTasks}</p>
-              </CardBody>
-            </Card>
-            <Card className="bg-default-100/80 h-full">
-              <CardBody className="py-6 flex flex-col justify-center">
-                <p className="text-sm text-default-600">Completadas</p>
-                <p className="text-2xl font-semibold text-success">
-                  {stats.completedTasks}
-                </p>
-              </CardBody>
-            </Card>
-            <Card className="bg-default-100/80 h-full">
-              <CardBody className="py-6 flex flex-col justify-center">
-                <p className="text-sm text-default-600">Notificaciones</p>
-                <p className="text-2xl font-semibold">
-                  {stats.unreadNotifications}
-                </p>
-              </CardBody>
-            </Card>
-            <Card className="bg-default-100/80 h-full">
-              <CardBody className="py-6 flex flex-col justify-center">
-                <p className="text-sm text-default-600">Vencidas</p>
-                <p className="text-2xl font-semibold text-danger">
-                  {stats.overdueTasks}
-                </p>
-              </CardBody>
-            </Card>
+            <Link href="/tareas">
+              <Card className="bg-default-100/80 h-full">
+                <CardBody className="py-6 flex flex-col justify-center">
+                  <p className="text-sm text-default-600">Total tareas</p>
+                  <p className="text-2xl font-semibold">{stats.totalTasks}</p>
+                </CardBody>
+              </Card>
+            </Link>
+            <Link href="/tareas">
+              <Card className="bg-default-100/80 h-full">
+                <CardBody className="py-6 flex flex-col justify-center">
+                  <p className="text-sm text-default-600">Completadas</p>
+                  <p className="text-2xl font-semibold text-success">
+                    {stats.completedTasks}
+                  </p>
+                </CardBody>
+              </Card>
+            </Link>
+            <Link href="/notificaciones">
+              <Card className="bg-default-100/80 h-full">
+                <CardBody className="py-6 flex flex-col justify-center">
+                  <p className="text-sm text-default-600">Notificaciones</p>
+                  <p className="text-2xl font-semibold">
+                    {stats.unreadNotifications}
+                  </p>
+                </CardBody>
+              </Card>
+            </Link>
+            <Link href="/tareas">
+              <Card className="bg-default-100/80 h-full">
+                <CardBody className="py-6 flex flex-col justify-center">
+                  <p className="text-sm text-default-600">Vencidas</p>
+                  <p className="text-2xl font-semibold text-danger">
+                    {stats.overdueTasks}
+                  </p>
+                </CardBody>
+              </Card>
+            </Link>
           </div>
         </div>
       </div>
