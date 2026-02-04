@@ -146,6 +146,51 @@ export default function TareasPage() {
     }
   };
 
+  const getAdminUsers = async () => {
+    if (users.length > 0) {
+      return users.filter((u) => u.role === "admin");
+    }
+
+    try {
+      const res = await fetch("/api/users");
+
+      if (!res.ok) return [];
+      const data: User[] = await res.json();
+
+      setUsers(data);
+      return data.filter((u) => u.role === "admin");
+    } catch (e) {
+      console.error("Error cargando admins:", e);
+      return [];
+    }
+  };
+
+  const notifyAdmins = async (message: string) => {
+    if (!user || user.role === "admin") return;
+
+    try {
+      const admins = await getAdminUsers();
+
+      if (admins.length === 0) return;
+
+      await Promise.all(
+        admins.map((admin) =>
+          fetch("/api/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: admin.id,
+              message,
+              type: "admin_alert",
+            }),
+          }),
+        ),
+      );
+    } catch (e) {
+      console.error("Error notificando admins:", e);
+    }
+  };
+
   const updateStats = (taskList: Task[]) => {
     const total = taskList.length;
     const completed = taskList.filter((t) => t.status === "Completada").length;
@@ -246,6 +291,10 @@ export default function TareasPage() {
         });
       }
 
+      await notifyAdmins(
+        `Usuario ${user.username} creó la tarea "${formData.title}"`,
+      );
+
       await loadTasks();
       handleClearForm();
     } catch (e) {
@@ -329,6 +378,10 @@ export default function TareasPage() {
         });
       }
 
+      await notifyAdmins(
+        `Usuario ${user.username} actualizó la tarea #${selectedTaskId}: "${formData.title}"`,
+      );
+
       await loadTasks();
       handleClearForm();
     } catch (e) {
@@ -376,6 +429,10 @@ export default function TareasPage() {
 
         return;
       }
+
+      await notifyAdmins(
+        `Usuario ${user.username} eliminó la tarea #${selectedTaskId}: "${task.title}"`,
+      );
 
       await loadTasks();
       handleClearForm();
@@ -426,6 +483,10 @@ export default function TareasPage() {
           }),
         });
       }
+
+      await notifyAdmins(
+        `Usuario ${user.username} completó la tarea #${task.id}: "${task.title}"`,
+      );
 
       if (selectedTaskId === task.id) {
         setFormData({

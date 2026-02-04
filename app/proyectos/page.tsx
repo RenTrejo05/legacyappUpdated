@@ -17,9 +17,11 @@ import {
 } from "@heroui/table";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
 import { title } from "@/components/primitives";
 
 export default function ProyectosPage() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
@@ -43,6 +45,46 @@ export default function ProyectosPage() {
       setProjects(data);
     } catch (e) {
       console.error("Error cargando proyectos:", e);
+    }
+  };
+
+  const getAdminUsers = async () => {
+    try {
+      const res = await fetch("/api/users");
+
+      if (!res.ok) return [];
+      const data = (await res.json()) as Array<{ id: number; role?: string }>;
+
+      return data.filter((u) => u.role === "admin");
+    } catch (e) {
+      console.error("Error cargando admins:", e);
+      return [];
+    }
+  };
+
+  const notifyAdmins = async (message: string) => {
+    if (!user || user.role === "admin") return;
+
+    try {
+      const admins = await getAdminUsers();
+
+      if (admins.length === 0) return;
+
+      await Promise.all(
+        admins.map((admin) =>
+          fetch("/api/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: admin.id,
+              message,
+              type: "admin_alert",
+            }),
+          }),
+        ),
+      );
+    } catch (e) {
+      console.error("Error notificando admins:", e);
     }
   };
 
@@ -82,6 +124,10 @@ export default function ProyectosPage() {
         return;
       }
 
+      await notifyAdmins(
+        `Usuario ${user?.username ?? ""} creó el proyecto "${formData.name}"`,
+      );
+
       await loadProjects();
       handleClearForm();
     } catch (e) {
@@ -116,6 +162,10 @@ export default function ProyectosPage() {
         return;
       }
 
+      await notifyAdmins(
+        `Usuario ${user?.username ?? ""} actualizó el proyecto #${selectedProjectId}: "${formData.name}"`,
+      );
+
       await loadProjects();
       handleClearForm();
     } catch (e) {
@@ -149,6 +199,11 @@ export default function ProyectosPage() {
 
         return;
       }
+
+      await notifyAdmins(
+        `Usuario ${user?.username ?? ""} eliminó el proyecto #${selectedProjectId}: "${project.name}"`,
+      );
+
       await loadProjects();
       handleClearForm();
     } catch (e) {

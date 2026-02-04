@@ -68,7 +68,12 @@ export interface Notification {
   id: number;
   userId: number;
   message: string;
-  type: "task_assigned" | "task_updated" | "task_completed" | "comment_added";
+  type:
+    | "task_assigned"
+    | "task_updated"
+    | "task_completed"
+    | "comment_added"
+    | "admin_alert";
   read: boolean;
   createdAt: string;
 }

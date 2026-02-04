@@ -17,6 +17,7 @@ const TYPE_LABELS: Record<string, string> = {
   task_updated: "Tarea Actualizada",
   task_completed: "Tarea Completada",
   comment_added: "Comentario Agregado",
+  admin_alert: "Actividad de Usuario",
 };
 
 const TYPE_COLORS: Record<
@@ -27,6 +28,7 @@ const TYPE_COLORS: Record<
   task_updated: "warning",
   task_completed: "success",
   comment_added: "secondary",
+  admin_alert: "danger",
 };
 
 export default function NotificacionesPage() {

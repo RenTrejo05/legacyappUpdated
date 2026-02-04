@@ -4,8 +4,8 @@ import type { Comment, User, Task } from "@/types";
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
 import { Button } from "@heroui/button";
 import { Divider } from "@heroui/divider";
 
@@ -19,22 +19,31 @@ export default function ComentariosPage() {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState<Comment[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    const loadUsers = async () => {
+    const loadAll = async () => {
       try {
-        const res = await fetch("/api/users");
+        const [usersRes, tasksRes] = await Promise.all([
+          fetch("/api/users"),
+          fetch("/api/tasks"),
+        ]);
 
-        if (!res.ok) return;
-        const data: User[] = await res.json();
+        if (usersRes.ok) {
+          const usersData: User[] = await usersRes.json();
+          setUsers(usersData);
+        }
 
-        setUsers(data);
+        if (tasksRes.ok) {
+          const tasksData: Task[] = await tasksRes.json();
+          setTasks(tasksData);
+        }
       } catch (e) {
-        console.error("Error cargando usuarios:", e);
+        console.error("Error cargando datos:", e);
       }
     };
 
-    loadUsers();
+    loadAll();
   }, []);
 
   const loadComments = async () => {
@@ -59,6 +68,51 @@ export default function ComentariosPage() {
       setComments(data);
     } catch (e) {
       console.error("Error cargando comentarios:", e);
+    }
+  };
+
+  const getAdminUsers = async () => {
+    if (users.length > 0) {
+      return users.filter((u) => u.role === "admin");
+    }
+
+    try {
+      const res = await fetch("/api/users");
+
+      if (!res.ok) return [];
+      const data: User[] = await res.json();
+
+      setUsers(data);
+      return data.filter((u) => u.role === "admin");
+    } catch (e) {
+      console.error("Error cargando admins:", e);
+      return [];
+    }
+  };
+
+  const notifyAdmins = async (message: string) => {
+    if (!user || user.role === "admin") return;
+
+    try {
+      const admins = await getAdminUsers();
+
+      if (admins.length === 0) return;
+
+      await Promise.all(
+        admins.map((admin) =>
+          fetch("/api/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: admin.id,
+              message,
+              type: "admin_alert",
+            }),
+          }),
+        ),
+      );
+    } catch (e) {
+      console.error("Error notificando admins:", e);
     }
   };
 
@@ -105,6 +159,10 @@ export default function ComentariosPage() {
         return;
       }
 
+      await notifyAdmins(
+        `Usuario ${user.username} agregó un comentario en la tarea #${id}`,
+      );
+
       setCommentText("");
       await loadComments();
     } catch (e) {
@@ -119,6 +177,12 @@ export default function ComentariosPage() {
     return foundUser ? foundUser.username : "Usuario desconocido";
   };
 
+  const getTaskTitle = (taskIdNum: number) => {
+    const task = tasks.find((t) => t.id === taskIdNum);
+
+    return task ? task.title : "Tarea desconocida";
+  };
+
   return (
     <ProtectedRoute>
       <div className="flex flex-col gap-6">
@@ -131,14 +195,36 @@ export default function ComentariosPage() {
           </CardHeader>
           <CardBody>
             <div className="flex flex-col gap-4">
-              <Input
-                label="ID Tarea"
-                placeholder="Ingresa el ID de la tarea"
-                type="number"
-                value={taskId}
+              <Select
+                label="Tarea"
+                placeholder="Selecciona una tarea"
+                selectedKeys={taskId ? [taskId] : []}
                 variant="bordered"
-                onValueChange={setTaskId}
-              />
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0];
+                  setTaskId(selected ? String(selected) : "");
+                  if (selected) {
+                    // Auto-load comments when task is selected
+                    setTimeout(() => {
+                      const id = parseInt(String(selected));
+                      if (id) {
+                        fetch(`/api/comments?taskId=${id}`)
+                          .then((res) => (res.ok ? res.json() : []))
+                          .then((data: Comment[]) => setComments(data))
+                          .catch(() => setComments([]));
+                      }
+                    }, 0);
+                  } else {
+                    setComments([]);
+                  }
+                }}
+              >
+                {tasks.map((task) => (
+                  <SelectItem key={task.id}>
+                    #{task.id} - {task.title}
+                  </SelectItem>
+                ))}
+              </Select>
 
               <Textarea
                 label="Comentario"
@@ -153,9 +239,6 @@ export default function ComentariosPage() {
                 <Button color="primary" onPress={handleAddComment}>
                   Agregar Comentario
                 </Button>
-                <Button variant="flat" onPress={loadComments}>
-                  Cargar Comentarios
-                </Button>
               </div>
             </div>
           </CardBody>
@@ -165,13 +248,16 @@ export default function ComentariosPage() {
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold">
-              Comentarios {taskId ? `- Tarea #${taskId}` : ""}
+              Comentarios
+              {taskId
+                ? ` - #${taskId}: ${getTaskTitle(parseInt(taskId))}`
+                : ""}
             </h2>
           </CardHeader>
           <CardBody>
             {!taskId ? (
               <p className="text-default-500">
-                Ingresa un ID de tarea para ver los comentarios
+                Selecciona una tarea para ver los comentarios
               </p>
             ) : comments.length === 0 ? (
               <p className="text-default-500">
