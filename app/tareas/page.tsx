@@ -625,6 +625,7 @@ export default function TareasPage() {
                 <Input
                   label="Horas Estimadas"
                   step="0.5"
+                  min="0"
                   type="number"
                   value={String(formData.estimatedHours)}
                   variant="bordered"
