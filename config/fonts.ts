@@ -4,12 +4,12 @@ export const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
-  preload: true,
+  preload: false,
 });
 
 export const fontMono = FontMono({
   subsets: ["latin"],
   variable: "--font-mono",
   display: "swap",
-  preload: true,
+  preload: false,
 });

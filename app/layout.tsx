@@ -50,6 +50,12 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <style>{`
+          @font-face {
+            font-family: 'sans-serif';
+            font-display: swap;
+          }
+        `}</style>
       </head>
       <body
         className={clsx(

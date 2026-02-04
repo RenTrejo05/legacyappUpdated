@@ -4,6 +4,11 @@ const nextConfig = {
     // Warnings are allowed in build, only errors will fail
     ignoreDuringBuilds: false,
   },
+  reactStrictMode: false,
+  compress: true,
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  optimizeFonts: true,
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Ensure externals array exists
@@ -23,6 +28,19 @@ const nextConfig = {
           {
             key: 'X-Robots-Tag',
             value: 'index, follow',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
           },
         ],
       },
